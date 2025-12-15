@@ -12,7 +12,7 @@ export class HealthController {
   async check() {
     try {
       // Check database connection
-      await this.prisma.$queryRaw`SELECT 1`;
+      await this.prisma.user.count();
       
       return {
         status: 'ok',

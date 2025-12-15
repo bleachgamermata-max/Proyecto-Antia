@@ -6,22 +6,20 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting seed...');
 
-  // Clear existing data
-  await prisma.otpToken.deleteMany();
-  await prisma.config.deleteMany();
-  await prisma.ticket.deleteMany();
-  await prisma.payout.deleteMany();
-  await prisma.commission.deleteMany();
-  await prisma.referralEvent.deleteMany();
-  await prisma.referralLink.deleteMany();
-  await prisma.house.deleteMany();
-  await prisma.channelAccessGrant.deleteMany();
-  await prisma.receipt.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.product.deleteMany();
-  await prisma.clientProfile.deleteMany();
-  await prisma.tipsterProfile.deleteMany();
-  await prisma.user.deleteMany();
+  // Clear existing data (skip if fresh database)
+  try {
+    await prisma.user.deleteMany().catch(() => {});
+    await prisma.tipsterProfile.deleteMany().catch(() => {});
+    await prisma.clientProfile.deleteMany().catch(() => {});
+    await prisma.product.deleteMany().catch(() => {});
+    await prisma.order.deleteMany().catch(() => {});
+    await prisma.house.deleteMany().catch(() => {});
+    await prisma.referralLink.deleteMany().catch(() => {});
+    await prisma.referralEvent.deleteMany().catch(() => {});
+    await prisma.config.deleteMany().catch(() => {});
+  } catch (e) {
+    console.log('📦 Fresh database, skipping cleanup');
+  }
 
   // Create SuperAdmin
   const superAdmin = await prisma.user.create({

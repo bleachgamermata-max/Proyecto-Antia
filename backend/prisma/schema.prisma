@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "mongodb"
-  url      = "mongodb://localhost:27017/antia_db"
+  url      = env("DATABASE_URL")
 }
 
 // Main Models

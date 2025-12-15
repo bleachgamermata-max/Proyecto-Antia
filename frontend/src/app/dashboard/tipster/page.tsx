@@ -18,12 +18,22 @@ export default function TipsterDashboard() {
 
   const loadData = async () => {
     try {
-      const [productsRes, metricsRes] = await Promise.all([
-        productsApi.getMy(),
-        referralsApi.getMetrics(),
-      ]);
-      setProducts(productsRes.data);
-      setMetrics(metricsRes.data);
+      // Load products
+      try {
+        const productsRes = await productsApi.getMy();
+        setProducts(productsRes.data);
+      } catch (error) {
+        console.error('Error loading products:', error);
+      }
+      
+      // Load metrics (optional)
+      try {
+        const metricsRes = await referralsApi.getMetrics();
+        setMetrics(metricsRes.data);
+      } catch (error) {
+        console.error('Error loading metrics:', error);
+        setMetrics({ clicks: 0, registers: 0, ftds: 0, deposits: 0, totalDeposits: 0, conversionRate: 0 });
+      }
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {

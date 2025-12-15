@@ -1,0 +1,40 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { ProductsModule } from './products/products.module';
+import { OrdersModule } from './orders/orders.module';
+import { ReferralsModule } from './referrals/referrals.module';
+import { PayoutsModule } from './payouts/payouts.module';
+import { HousesModule } from './houses/houses.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
+import { TicketsModule } from './tickets/tickets.module';
+import { BotModule } from './bot/bot.module';
+import { HealthController } from './health.controller';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // 1 minute
+      limit: 100, // 100 requests per minute
+    }]),
+    PrismaModule,
+    AuthModule,
+    UsersModule,
+    ProductsModule,
+    OrdersModule,
+    ReferralsModule,
+    PayoutsModule,
+    HousesModule,
+    WebhooksModule,
+    TicketsModule,
+    BotModule,
+  ],
+  controllers: [HealthController],
+})
+export class AppModule {}

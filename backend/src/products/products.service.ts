@@ -48,11 +48,25 @@ export class ProductsService {
   }
 
   async publish(id: string, tipsterId: string) {
-    return this.update(id, tipsterId, { active: true });
+    const product = await this.findOne(id);
+    if (product.tipsterId !== tipsterId) {
+      throw new ForbiddenException('Not authorized');
+    }
+    return this.prisma.product.update({
+      where: { id },
+      data: { active: true },
+    });
   }
 
   async pause(id: string, tipsterId: string) {
-    return this.update(id, tipsterId, { active: false });
+    const product = await this.findOne(id);
+    if (product.tipsterId !== tipsterId) {
+      throw new ForbiddenException('Not authorized');
+    }
+    return this.prisma.product.update({
+      where: { id },
+      data: { active: false },
+    });
   }
 
   async getCheckoutLink(productId: string, tipsterId: string) {

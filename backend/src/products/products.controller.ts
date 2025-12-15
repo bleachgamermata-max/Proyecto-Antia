@@ -6,26 +6,34 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ProductsService } from './products.service';
 import { CreateProductDto, UpdateProductDto } from './dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 @ApiTags('products')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('products')
 export class ProductsController {
-  constructor(private productsService: ProductsService) {}
+  constructor(
+    private productsService: ProductsService,
+    private prisma: PrismaService,
+  ) {}
 
   @Post()
   @Roles('TIPSTER')
   @ApiOperation({ summary: 'Create new product (Tipster only)' })
   async create(@CurrentUser() user: any, @Body() dto: CreateProductDto) {
-    return this.productsService.create(user.tipsterProfile.id, dto);
+    // Get tipster profile
+    const tipsterProfile = await this.prisma.tipsterProfile.findUnique({
+      where: { userId: user.id },
+    });
+    return this.productsService.create(tipsterProfile.id, dto);
   }
 
   @Get('my')
   @Roles('TIPSTER')
   @ApiOperation({ summary: 'Get my products (Tipster only)' })
   async getMyProducts(@CurrentUser() user: any) {
-    return this.productsService.findAllByTipster(user.tipsterProfile.id);
+    return this.productsService.findAllByUserId(user.id);
   }
 
   @Get(':id')

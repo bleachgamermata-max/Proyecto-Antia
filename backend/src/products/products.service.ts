@@ -22,6 +22,19 @@ export class ProductsService {
     });
   }
 
+  async findAllByUserId(userId: string) {
+    // Get tipster profile first
+    const tipsterProfile = await this.prisma.tipsterProfile.findUnique({
+      where: { userId },
+    });
+    
+    if (!tipsterProfile) {
+      return [];
+    }
+    
+    return this.findAllByTipster(tipsterProfile.id);
+  }
+
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },

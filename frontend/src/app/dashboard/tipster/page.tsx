@@ -1,0 +1,201 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { productsApi, referralsApi, payoutsApi, authApi } from '@/lib/api';
+
+export default function TipsterDashboard() {
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [products, setProducts] = useState([]);
+  const [metrics, setMetrics] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [productsRes, metricsRes] = await Promise.all([
+        productsApi.getMy(),
+        referralsApi.getMetrics(),
+      ]);
+      setProducts(productsRes.data);
+      setMetrics(metricsRes.data);
+    } catch (error) {
+      console.error('Error loading dashboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+      router.push('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <aside className="fixed top-0 left-0 w-64 h-full bg-white border-r border-gray-200">
+        <div className="p-6">
+          <div className="text-2xl font-bold text-blue-600 mb-8">Antia</div>
+          
+          <div className="mb-6 pb-6 border-b border-gray-200">
+            <div className="text-sm text-gray-500">Fausto Perez</div>
+            <div className="text-xs text-gray-400">#5203</div>
+          </div>
+
+          <nav className="space-y-2">
+            <Link href="/dashboard/tipster" className="block px-4 py-2 rounded-lg bg-blue-50 text-blue-600 font-medium">
+              Dashboard
+            </Link>
+            <Link href="/dashboard/tipster/products" className="block px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50">
+              Mis Productos
+            </Link>
+            <Link href="/dashboard/tipster/referrals" className="block px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50">
+              Afiliación
+            </Link>
+            <Link href="/dashboard/tipster/payouts" className="block px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50">
+              Liquidaciones
+            </Link>
+            <Link href="/dashboard/tipster/profile" className="block px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50">
+              Perfil
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="w-full text-left px-4 py-2 rounded-lg text-red-600 hover:bg-red-50"
+            >
+              Cerrar Sesión
+            </button>
+          </nav>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="ml-64 p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Hola Fausto, Bienvenido de nuevo!</h1>
+          <p className="text-gray-600 mt-1">Aquí está un resumen de tu actividad</p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-gray-500">Productos Activos</div>
+              <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+8.5%</div>
+            </div>
+            <div className="text-3xl font-bold text-gray-900">{products.length}</div>
+            <div className="text-xs text-gray-500 mt-1">{products.filter((p: any) => p.active).length} activos</div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-gray-500">Clicks Únicos</div>
+              <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+1.3%</div>
+            </div>
+            <div className="text-3xl font-bold text-gray-900">{metrics?.clicks || 0}</div>
+            <div className="text-xs text-gray-500 mt-1">Este mes</div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-gray-500">Registros</div>
+              <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+4.3%</div>
+            </div>
+            <div className="text-3xl font-bold text-gray-900">{metrics?.registers || 0}</div>
+            <div className="text-xs text-gray-500 mt-1">Conversión: {metrics?.conversionRate || 0}%</div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-gray-500">Ingresos</div>
+              <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+1.8%</div>
+            </div>
+            <div className="text-3xl font-bold text-gray-900">€{(metrics?.totalDeposits / 100 || 0).toFixed(2)}</div>
+            <div className="text-xs text-gray-500 mt-1">Este mes</div>
+          </div>
+        </div>
+
+        {/* Products Section */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900">Mis Productos</h2>
+              <Link
+                href="/dashboard/tipster/products/new"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+              >
+                + Crear Producto
+              </Link>
+            </div>
+          </div>
+          
+          <div className="p-6">
+            {products.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500 mb-4">No tienes productos aún</p>
+                <Link
+                  href="/dashboard/tipster/products/new"
+                  className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+                >
+                  Crear tu primer producto
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {products.map((product: any) => (
+                  <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{product.title}</h3>
+                        <p className="text-sm text-gray-500 mt-1">{product.description}</p>
+                        <div className="flex items-center gap-4 mt-2">
+                          <span className="text-sm font-medium text-green-600">
+                            €{(product.priceCents / 100).toFixed(2)}
+                          </span>
+                          <span className={`text-xs px-2 py-1 rounded ${product.active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                            {product.active ? 'Activo' : 'Pausado'}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {product.billingType === 'SUBSCRIPTION' ? 'Suscripción' : 'Pago único'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/dashboard/tipster/products/${product.id}`}
+                          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+                        >
+                          Ver
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

@@ -412,9 +412,9 @@ export default function Home() {
             <div>
               <h4 className="font-semibold mb-4">Producto</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
-                <li><a href="#" className="hover:text-white">Características</a></li>
-                <li><a href="#" className="hover:text-white">Precios</a></li>
-                <li><a href="#" className="hover:text-white">Demo</a></li>
+                <li><a href="#features" className="hover:text-white transition">Características</a></li>
+                <li><a href="#pricing" className="hover:text-white transition">Precios</a></li>
+                <li><Link href="/login" className="hover:text-white transition">Demo</Link></li>
               </ul>
             </div>
             <div>

@@ -18,10 +18,6 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.prisma.user.findUnique({
       where: { email },
-      include: {
-        tipsterProfile: true,
-        clientProfile: true,
-      },
     });
 
     if (!user) {
@@ -73,23 +69,23 @@ export class AuthService {
     // Hash password
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
-    // Create user with tipster profile
+    // Create user
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         phone: dto.phone,
         passwordHash,
-        role: UserRole.TIPSTER,
-        status: UserStatus.PENDING, // Needs admin approval
-        tipsterProfile: {
-          create: {
-            publicName: dto.name,
-            telegramUsername: dto.telegramUsername,
-          },
-        },
+        role: 'TIPSTER',
+        status: 'PENDING', // Needs admin approval
       },
-      include: {
-        tipsterProfile: true,
+    });
+
+    // Create tipster profile separately
+    await this.prisma.tipsterProfile.create({
+      data: {
+        userId: user.id,
+        publicName: dto.name,
+        telegramUsername: dto.telegramUsername,
       },
     });
 
@@ -116,16 +112,19 @@ export class AuthService {
         email: dto.email,
         phone: dto.phone,
         passwordHash,
-        role: UserRole.CLIENT,
-        status: UserStatus.ACTIVE,
-        clientProfile: {
-          create: {
-            countryIso: dto.countryIso,
-            consent18: dto.consent18,
-            consentTerms: dto.consentTerms,
-            consentPrivacy: dto.consentPrivacy,
-          },
-        },
+        role: 'CLIENT',
+        status: 'ACTIVE',
+      },
+    });
+
+    // Create client profile separately
+    await this.prisma.clientProfile.create({
+      data: {
+        userId: user.id,
+        countryIso: dto.countryIso,
+        consent18: dto.consent18,
+        consentTerms: dto.consentTerms,
+        consentPrivacy: dto.consentPrivacy,
       },
     });
 

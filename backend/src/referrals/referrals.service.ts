@@ -8,7 +8,6 @@ export class ReferralsService {
   async getLinks(tipsterId: string) {
     return this.prisma.referralLink.findMany({
       where: { tipsterId },
-      include: { house: true },
     });
   }
 
@@ -48,7 +47,6 @@ export class ReferralsService {
   async getCommissions(tipsterId: string) {
     return this.prisma.commission.findMany({
       where: { tipsterId },
-      include: { house: true },
       orderBy: { periodMonth: 'desc' },
     });
   }

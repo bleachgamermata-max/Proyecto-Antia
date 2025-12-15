@@ -5,7 +5,6 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { PayoutsService } from './payouts.service';
-import { UserRole } from '@prisma/client';
 
 @ApiTags('payouts')
 @ApiBearerAuth()
@@ -15,7 +14,7 @@ export class PayoutsController {
   constructor(private payoutsService: PayoutsService) {}
 
   @Get('my')
-  @Roles(UserRole.TIPSTER)
+  @Roles('TIPSTER')
   async getMyPayouts(@CurrentUser() user: any) {
     return this.payoutsService.getByTipster(user.tipsterProfile.id);
   }

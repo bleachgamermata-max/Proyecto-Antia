@@ -25,7 +25,6 @@ export class ProductsService {
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
-      include: { tipster: true },
     });
 
     if (!product) {

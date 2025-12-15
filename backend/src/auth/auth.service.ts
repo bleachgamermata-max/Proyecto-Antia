@@ -3,7 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
-import { UserRole, UserStatus } from '@prisma/client';
 import { RegisterTipsterDto, RegisterClientDto, LoginDto } from './dto';
 import { UserPayload } from '../common/interfaces/user-payload.interface';
 
@@ -29,7 +28,7 @@ export class AuthService {
       return null;
     }
 
-    if (user.status !== UserStatus.ACTIVE) {
+    if (user.status !== 'ACTIVE') {
       throw new UnauthorizedException('Account is not active');
     }
 

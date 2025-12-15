@@ -6,7 +6,6 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ProductsService } from './products.service';
 import { CreateProductDto, UpdateProductDto } from './dto';
-import { UserRole } from '@prisma/client';
 
 @ApiTags('products')
 @ApiBearerAuth()
@@ -16,14 +15,14 @@ export class ProductsController {
   constructor(private productsService: ProductsService) {}
 
   @Post()
-  @Roles(UserRole.TIPSTER)
+  @Roles('TIPSTER')
   @ApiOperation({ summary: 'Create new product (Tipster only)' })
   async create(@CurrentUser() user: any, @Body() dto: CreateProductDto) {
     return this.productsService.create(user.tipsterProfile.id, dto);
   }
 
   @Get('my')
-  @Roles(UserRole.TIPSTER)
+  @Roles('TIPSTER')
   @ApiOperation({ summary: 'Get my products (Tipster only)' })
   async getMyProducts(@CurrentUser() user: any) {
     return this.productsService.findAllByTipster(user.tipsterProfile.id);
@@ -36,7 +35,7 @@ export class ProductsController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.TIPSTER)
+  @Roles('TIPSTER')
   @ApiOperation({ summary: 'Update product (Tipster only)' })
   async update(
     @Param('id') id: string,
@@ -47,21 +46,21 @@ export class ProductsController {
   }
 
   @Post(':id/publish')
-  @Roles(UserRole.TIPSTER)
+  @Roles('TIPSTER')
   @ApiOperation({ summary: 'Publish product (Tipster only)' })
   async publish(@Param('id') id: string, @CurrentUser() user: any) {
     return this.productsService.publish(id, user.tipsterProfile.id);
   }
 
   @Post(':id/pause')
-  @Roles(UserRole.TIPSTER)
+  @Roles('TIPSTER')
   @ApiOperation({ summary: 'Pause product (Tipster only)' })
   async pause(@Param('id') id: string, @CurrentUser() user: any) {
     return this.productsService.pause(id, user.tipsterProfile.id);
   }
 
   @Get(':id/checkout-link')
-  @Roles(UserRole.TIPSTER)
+  @Roles('TIPSTER')
   @ApiOperation({ summary: 'Get checkout link for product' })
   async getCheckoutLink(@Param('id') id: string, @CurrentUser() user: any) {
     return this.productsService.getCheckoutLink(id, user.tipsterProfile.id);

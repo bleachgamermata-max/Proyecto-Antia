@@ -5,7 +5,6 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ReferralsService } from './referrals.service';
-import { UserRole } from '@prisma/client';
 
 @ApiTags('referrals')
 @ApiBearerAuth()
@@ -15,14 +14,14 @@ export class ReferralsController {
   constructor(private referralsService: ReferralsService) {}
 
   @Get('links')
-  @Roles(UserRole.TIPSTER)
+  @Roles('TIPSTER')
   @ApiOperation({ summary: 'Get referral links (Tipster only)' })
   async getLinks(@CurrentUser() user: any) {
     return this.referralsService.getLinks(user.tipsterProfile.id);
   }
 
   @Get('metrics')
-  @Roles(UserRole.TIPSTER)
+  @Roles('TIPSTER')
   @ApiOperation({ summary: 'Get referral metrics (Tipster only)' })
   async getMetrics(@CurrentUser() user: any, @Query('range') range?: string) {
     // TODO: Parse range parameter
@@ -30,7 +29,7 @@ export class ReferralsController {
   }
 
   @Get('commissions')
-  @Roles(UserRole.TIPSTER)
+  @Roles('TIPSTER')
   @ApiOperation({ summary: 'Get commissions (Tipster only)' })
   async getCommissions(@CurrentUser() user: any) {
     return this.referralsService.getCommissions(user.tipsterProfile.id);

@@ -1,6 +1,5 @@
-import { IsString, IsNumber, IsEnum, IsOptional, IsBoolean, Min } from 'class-validator';
+import { IsString, IsNumber, IsOptional, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { BillingType, BillingPeriod, AccessMode } from '@prisma/client';
 
 export class CreateProductDto {
   @ApiProperty()
@@ -22,14 +21,14 @@ export class CreateProductDto {
   @IsString()
   currency?: string;
 
-  @ApiProperty({ enum: BillingType })
-  @IsEnum(BillingType)
-  billingType: BillingType;
+  @ApiProperty({ example: 'ONE_TIME' })
+  @IsString()
+  billingType: string;
 
-  @ApiProperty({ enum: BillingPeriod, required: false })
+  @ApiProperty({ example: 'MONTH', required: false })
   @IsOptional()
-  @IsEnum(BillingPeriod)
-  billingPeriod?: BillingPeriod;
+  @IsString()
+  billingPeriod?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -41,10 +40,10 @@ export class CreateProductDto {
   @IsString()
   telegramChannelId?: string;
 
-  @ApiProperty({ enum: AccessMode, default: 'AUTO_JOIN' })
+  @ApiProperty({ example: 'AUTO_JOIN', default: 'AUTO_JOIN' })
   @IsOptional()
-  @IsEnum(AccessMode)
-  accessMode?: AccessMode;
+  @IsString()
+  accessMode?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

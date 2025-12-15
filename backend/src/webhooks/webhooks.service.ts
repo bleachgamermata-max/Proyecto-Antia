@@ -22,15 +22,8 @@ export class WebhooksService {
   }
 
   async handlePaymentConfirm(data: any) {
-    // Log webhook
-    await this.prisma.webhookLog.create({
-      data: {
-        direction: 'IN',
-        target: 'payment_confirm',
-        payload: data,
-        status: 'OK',
-      },
-    });
+    // Log webhook - Skip for now (requires WebhookLog model)
+    console.log('Webhook received:', data);
 
     // Find order
     const order = await this.prisma.order.findFirst({

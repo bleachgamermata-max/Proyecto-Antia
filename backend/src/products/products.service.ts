@@ -7,12 +7,38 @@ export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
   async create(tipsterId: string, dto: CreateProductDto) {
-    return this.prisma.product.create({
-      data: {
-        ...dto,
-        tipsterId,
-      },
+    // Use $runCommandRaw to bypass transaction requirement
+    const productData = {
+      tipsterId,
+      title: dto.title,
+      description: dto.description || null,
+      priceCents: dto.priceCents,
+      currency: dto.currency || 'EUR',
+      billingType: dto.billingType,
+      billingPeriod: dto.billingPeriod || null,
+      capacityLimit: dto.capacityLimit || null,
+      active: true,
+      telegramChannelId: dto.telegramChannelId || null,
+      accessMode: dto.accessMode || 'AUTO_JOIN',
+      validityDays: dto.validityDays || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    // Insert directly using MongoDB driver to avoid transaction
+    const result = await this.prisma.$runCommandRaw({
+      insert: 'products',
+      documents: [productData],
     });
+
+    // Fetch the created product
+    const products = await this.prisma.product.findMany({
+      where: { tipsterId },
+      orderBy: { createdAt: 'desc' },
+      take: 1,
+    });
+
+    return products[0];
   }
 
   async findAllByTipster(tipsterId: string) {

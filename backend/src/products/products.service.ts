@@ -119,11 +119,12 @@ export class ProductsService {
     }
     
     // Use $runCommandRaw to avoid transaction requirement (snake_case for MongoDB)
+    // Use { $date: ISOString } format for BSON dates
     await this.prisma.$runCommandRaw({
       update: 'products',
       updates: [{
         q: { _id: { $oid: id } },
-        u: { $set: { active: true, updated_at: new Date() } }
+        u: { $set: { active: true, updated_at: { $date: new Date().toISOString() } } }
       }]
     });
 
@@ -137,11 +138,12 @@ export class ProductsService {
     }
     
     // Use $runCommandRaw to avoid transaction requirement (snake_case for MongoDB)
+    // Use { $date: ISOString } format for BSON dates
     await this.prisma.$runCommandRaw({
       update: 'products',
       updates: [{
         q: { _id: { $oid: id } },
-        u: { $set: { active: false, updated_at: new Date() } }
+        u: { $set: { active: false, updated_at: { $date: new Date().toISOString() } } }
       }]
     });
 

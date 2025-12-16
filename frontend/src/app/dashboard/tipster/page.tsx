@@ -17,6 +17,16 @@ export default function TipsterDashboard() {
   const [showProductForm, setShowProductForm] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showProductDetail, setShowProductDetail] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    priceCents: '',
+    billingType: 'ONE_TIME',
+    telegramChannelId: '',
+    active: true,
+  });
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     loadData();

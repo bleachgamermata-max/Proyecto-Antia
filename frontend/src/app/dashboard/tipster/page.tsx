@@ -68,11 +68,29 @@ export default function TipsterDashboard() {
 
   const handleCreateProduct = () => {
     setSelectedProduct(null);
+    setFormData({
+      title: '',
+      description: '',
+      priceCents: '',
+      billingType: 'ONE_TIME',
+      telegramChannelId: '',
+      active: true,
+    });
+    setFormError('');
     setShowProductForm(true);
   };
 
   const handleEditProduct = (product: any) => {
     setSelectedProduct(product);
+    setFormData({
+      title: product.title || '',
+      description: product.description || '',
+      priceCents: product.priceCents ? (product.priceCents / 100).toString() : '',
+      billingType: product.billingType || 'ONE_TIME',
+      telegramChannelId: product.telegramChannelId || '',
+      active: product.active ?? true,
+    });
+    setFormError('');
     setShowProductForm(true);
   };
 
@@ -81,10 +99,73 @@ export default function TipsterDashboard() {
     setShowProductDetail(true);
   };
 
+  const handleSaveProduct = async () => {
+    try {
+      // Validación
+      if (!formData.title.trim()) {
+        setFormError('El título es obligatorio');
+        return;
+      }
+      
+      const price = parseFloat(formData.priceCents);
+      if (isNaN(price) || price < 0) {
+        setFormError('El precio debe ser un número válido mayor o igual a 0');
+        return;
+      }
+
+      setSaving(true);
+      setFormError('');
+
+      const payload = {
+        title: formData.title.trim(),
+        description: formData.description.trim() || undefined,
+        priceCents: Math.round(price * 100), // Convertir euros a centavos
+        billingType: formData.billingType,
+        telegramChannelId: formData.telegramChannelId.trim() || undefined,
+        currency: 'EUR',
+      };
+
+      if (selectedProduct) {
+        // Actualizar producto existente
+        await productsApi.update(selectedProduct.id, payload);
+        
+        // Actualizar el estado del producto (activo/pausado)
+        if (formData.active !== selectedProduct.active) {
+          if (formData.active) {
+            await productsApi.publish(selectedProduct.id);
+          } else {
+            await productsApi.pause(selectedProduct.id);
+          }
+        }
+      } else {
+        // Crear nuevo producto
+        const response = await productsApi.create(payload);
+        
+        // Si se creó como activo, publicarlo
+        if (formData.active && response.data?.id) {
+          await productsApi.publish(response.data.id);
+        }
+      }
+
+      // Recargar productos
+      await loadData();
+
+      // Cerrar modal
+      closeModals();
+      
+    } catch (error: any) {
+      console.error('Error saving product:', error);
+      setFormError(error.response?.data?.message || 'Error al guardar el producto. Por favor, intenta de nuevo.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const closeModals = () => {
     setShowProductForm(false);
     setShowProductDetail(false);
     setSelectedProduct(null);
+    setFormError('');
   };
 
   if (loading) {

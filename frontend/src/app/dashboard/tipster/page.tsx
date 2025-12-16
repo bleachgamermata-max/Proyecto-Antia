@@ -102,6 +102,78 @@ export default function TipsterDashboard() {
     }
   };
 
+  // Telegram functions
+  const handleConnectTelegram = async () => {
+    if (!telegramChannelInput.trim()) {
+      setTelegramError('Por favor, ingresa el ID o @username del canal');
+      return;
+    }
+
+    setTelegramLoading(true);
+    setTelegramError('');
+
+    try {
+      const response = await telegramApi.connect(telegramChannelInput.trim());
+      
+      if (response.data.success) {
+        setTelegramConnected(true);
+        setTelegramChannel(response.data.channelInfo);
+        setTelegramChannelInput('');
+        alert('✅ Canal conectado exitosamente');
+      } else {
+        setTelegramError(response.data.message || 'Error al conectar el canal');
+      }
+    } catch (error: any) {
+      setTelegramError(error.response?.data?.message || 'Error al conectar el canal');
+    } finally {
+      setTelegramLoading(false);
+    }
+  };
+
+  const handleDisconnectTelegram = async () => {
+    if (!confirm('¿Estás seguro de que deseas desconectar tu canal de Telegram?')) {
+      return;
+    }
+
+    setTelegramLoading(true);
+    try {
+      await telegramApi.disconnect();
+      setTelegramConnected(false);
+      setTelegramChannel(null);
+      alert('Canal desconectado');
+    } catch (error) {
+      alert('Error al desconectar el canal');
+    } finally {
+      setTelegramLoading(false);
+    }
+  };
+
+  const handlePublishToTelegram = async (productId: string) => {
+    if (!telegramConnected) {
+      alert('Primero debes conectar tu canal de Telegram');
+      return;
+    }
+
+    if (!confirm('¿Deseas publicar este producto en tu canal de Telegram?')) {
+      return;
+    }
+
+    setPublishingProduct(productId);
+    try {
+      const response = await telegramApi.publishProduct(productId);
+      
+      if (response.data.success) {
+        alert('✅ Producto publicado en Telegram exitosamente');
+      } else {
+        alert('❌ ' + (response.data.message || 'Error al publicar'));
+      }
+    } catch (error: any) {
+      alert('❌ Error: ' + (error.response?.data?.message || 'Error al publicar en Telegram'));
+    } finally {
+      setPublishingProduct(null);
+    }
+  };
+
   const handleCreateProduct = () => {
     setSelectedProduct(null);
     setFormData({

@@ -28,17 +28,16 @@ export default function LoginPage() {
         localStorage.setItem('access_token', access_token);
       }
       
-      // Redirect based on role
+      // Redirect based on role using window.location to ensure localStorage is persisted
       if (user.role === 'TIPSTER') {
-        router.push('/dashboard/tipster');
+        window.location.href = '/dashboard/tipster';
       } else if (user.role === 'CLIENT') {
-        router.push('/dashboard/client');
+        window.location.href = '/dashboard/client';
       } else {
-        router.push('/dashboard/admin');
+        window.location.href = '/dashboard/admin';
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al iniciar sesión');
-    } finally {
       setLoading(false);
     }
   };

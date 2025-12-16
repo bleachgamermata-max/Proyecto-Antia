@@ -94,7 +94,6 @@ export class ProductsService {
     if (dto.billingType !== undefined) updateData.billing_type = dto.billingType;
     if (dto.billingPeriod !== undefined) updateData.billing_period = dto.billingPeriod;
     if (dto.capacityLimit !== undefined) updateData.capacity_limit = dto.capacityLimit;
-    if (dto.active !== undefined) updateData.active = dto.active;
     if (dto.telegramChannelId !== undefined) updateData.telegram_channel_id = dto.telegramChannelId;
     if (dto.accessMode !== undefined) updateData.access_mode = dto.accessMode;
     if (dto.validityDays !== undefined) updateData.validity_days = dto.validityDays;

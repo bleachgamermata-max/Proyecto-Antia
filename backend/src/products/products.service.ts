@@ -26,19 +26,31 @@ export class ProductsService {
     };
 
     // Insert directly using MongoDB driver to avoid transaction
-    const result = await this.prisma.$runCommandRaw({
+    const result: any = await this.prisma.$runCommandRaw({
       insert: 'products',
       documents: [productData],
     });
 
-    // Fetch the created product
-    const products = await this.prisma.product.findMany({
-      where: { tipsterId },
-      orderBy: { createdAt: 'desc' },
-      take: 1,
-    });
+    // MongoDB insertOne returns the inserted IDs
+    const insertedId = result.insertedIds?.[0] || result.writeErrors?.[0]?.errmsg;
+    
+    if (!insertedId) {
+      // If we can't get the ID, find by title and most recent
+      const products = await this.prisma.product.findMany({
+        where: { 
+          tipsterId,
+          title: dto.title 
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      });
+      return products[0];
+    }
 
-    return products[0];
+    // Fetch the created product by ID
+    return this.prisma.product.findUnique({
+      where: { id: insertedId.toString() },
+    });
   }
 
   async findAllByTipster(tipsterId: string) {

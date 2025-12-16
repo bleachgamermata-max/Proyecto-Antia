@@ -86,3 +86,10 @@ export const payoutsApi = {
 export const housesApi = {
   getAll: () => api.get('/houses'),
 };
+
+export const telegramApi = {
+  getChannelInfo: () => api.get('/telegram/channel-info'),
+  connect: (channelIdentifier: string) => api.post('/telegram/connect', { channelIdentifier }),
+  disconnect: () => api.delete('/telegram/disconnect'),
+  publishProduct: (productId: string) => api.post(`/products/${productId}/publish-telegram`),
+};

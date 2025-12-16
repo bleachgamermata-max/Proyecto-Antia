@@ -102,6 +102,12 @@
   - Created seed-simple.ts script to populate users without requiring MongoDB replica set
   - Fixed collection naming (User -> users, TipsterProfile -> tipster_profiles, etc.)
   - All test users now working: fausto.perez@antia.com, cliente@example.com, admin@antia.com
+- Fixed login flow (2025-12-16): Multiple authentication and routing issues
+  - Fixed CSP blocking issue by using relative API URLs (/api instead of absolute)
+  - Fixed Next.js rewrite configuration to properly proxy to backend
+  - Fixed axios interceptor to not interfere with login page
+  - Added delays to ensure localStorage synchronization before navigation
+  - Added token verification in dashboard before loading data
 
 ## Known Issues
 - None currently - product CRUD is working perfectly

@@ -98,6 +98,10 @@
 - Fixed MongoDB date format issue (using { $date: ISO } for BSON dates)
 - Fixed snake_case field mapping for Prisma/MongoDB compatibility
 - Cleaned up corrupted products with camelCase field names
+- Fixed login issue (2025-12-16): Database was empty in new environment
+  - Created seed-simple.ts script to populate users without requiring MongoDB replica set
+  - Fixed collection naming (User -> users, TipsterProfile -> tipster_profiles, etc.)
+  - All test users now working: fausto.perez@antia.com, cliente@example.com, admin@antia.com
 
 ## Known Issues
 - None currently - product CRUD is working perfectly

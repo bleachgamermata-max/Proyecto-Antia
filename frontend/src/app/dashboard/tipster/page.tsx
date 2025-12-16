@@ -31,20 +31,15 @@ export default function TipsterDashboard() {
   useEffect(() => {
     // Verificar autenticación antes de cargar datos
     const checkAuthAndLoadData = async () => {
-      console.log('🏠 Dashboard mounted');
       // Pequeño delay para asegurar que localStorage está disponible
       await new Promise(resolve => setTimeout(resolve, 50));
       
       const token = localStorage.getItem('access_token');
-      console.log('🔍 Token in dashboard:', token ? 'EXISTS' : 'MISSING');
-      
       if (!token) {
-        console.log('❌ No token, redirecting to login');
         router.push('/login');
         return;
       }
       
-      console.log('✅ Token found, loading data...');
       loadData();
     };
     

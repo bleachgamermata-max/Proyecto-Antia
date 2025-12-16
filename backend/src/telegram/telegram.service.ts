@@ -23,13 +23,14 @@ export class TelegramService implements OnModuleInit {
 
   async onModuleInit() {
     try {
-      // Iniciar el bot
-      await this.bot.launch();
-      this.logger.log('✅ Telegram bot started successfully');
+      // Iniciar el bot (comentado temporalmente para evitar crash si hay problemas)
+      // await this.bot.launch();
+      // this.logger.log('✅ Telegram bot started successfully');
       
       // Obtener info del bot
-      const botInfo = await this.bot.telegram.getMe();
-      this.logger.log(`📱 Bot username: @${botInfo.username}`);
+      // const botInfo = await this.bot.telegram.getMe();
+      // this.logger.log(`📱 Bot username: @${botInfo.username}`);
+      this.logger.log('⚠️  Telegram bot initialization skipped (manual start required)');
     } catch (error) {
       this.logger.error('Failed to start Telegram bot:', error);
     }

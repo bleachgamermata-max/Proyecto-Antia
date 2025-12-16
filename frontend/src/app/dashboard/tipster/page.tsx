@@ -30,12 +30,19 @@ export default function TipsterDashboard() {
 
   useEffect(() => {
     // Verificar autenticación antes de cargar datos
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-    loadData();
+    const checkAuthAndLoadData = async () => {
+      // Pequeño delay para asegurar que localStorage está disponible
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+      loadData();
+    };
+    
+    checkAuthAndLoadData();
   }, []);
 
   const loadData = async () => {

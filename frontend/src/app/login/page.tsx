@@ -28,13 +28,16 @@ export default function LoginPage() {
         localStorage.setItem('access_token', access_token);
       }
       
-      // Redirect based on role using window.location to ensure localStorage is persisted
+      // Pequeño delay para asegurar que localStorage se sincroniza
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Redirect based on role
       if (user.role === 'TIPSTER') {
-        window.location.href = '/dashboard/tipster';
+        router.push('/dashboard/tipster');
       } else if (user.role === 'CLIENT') {
-        window.location.href = '/dashboard/client';
+        router.push('/dashboard/client');
       } else {
-        window.location.href = '/dashboard/admin';
+        router.push('/dashboard/admin');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al iniciar sesión');

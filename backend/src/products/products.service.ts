@@ -165,4 +165,53 @@ export class ProductsService {
       tipsterId,
     };
   }
+
+  async publishToTelegram(productId: string, userId: string) {
+    // Lazy load TelegramService to avoid circular dependency
+    const { TelegramService } = await import('../telegram/telegram.service');
+    const telegramService = new TelegramService(this.prisma, null);
+
+    // Get tipster profile
+    const tipsterProfile = await this.prisma.tipsterProfile.findUnique({
+      where: { userId },
+    });
+
+    if (!tipsterProfile) {
+      return {
+        success: false,
+        message: 'Perfil de tipster no encontrado',
+      };
+    }
+
+    // Check if Telegram channel is connected
+    if (!tipsterProfile.telegramChannelId) {
+      return {
+        success: false,
+        message: 'No tienes un canal de Telegram conectado. Por favor, conéctalo primero.',
+      };
+    }
+
+    // Get product details
+    const product = await this.findOne(productId);
+
+    // Verify product belongs to this tipster
+    if (product.tipsterId !== tipsterProfile.id) {
+      return {
+        success: false,
+        message: 'No tienes permiso para publicar este producto',
+      };
+    }
+
+    // Get checkout link
+    const checkoutLink = await this.getCheckoutLink(productId, tipsterProfile.id);
+
+    // Publish to Telegram
+    return telegramService.publishProduct(
+      tipsterProfile.telegramChannelId,
+      {
+        ...product,
+        checkoutLink: checkoutLink.url,
+      },
+    );
+  }
 }

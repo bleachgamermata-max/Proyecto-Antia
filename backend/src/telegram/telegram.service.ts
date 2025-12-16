@@ -19,6 +19,7 @@ export class TelegramService implements OnModuleInit {
     }
     this.bot = new Telegraf(token);
     this.setupBot();
+    this.setupCallbackHandlers();
   }
 
   async onModuleInit() {

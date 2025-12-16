@@ -195,10 +195,10 @@ export default function TipsterDashboard() {
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-gray-900">Mis Productos</h2>
                   <button
-                    onClick={() => setActiveView('products')}
+                    onClick={handleCreateProduct}
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
                   >
-                    Ver todos
+                    + Crear Producto
                   </button>
                 </div>
               </div>

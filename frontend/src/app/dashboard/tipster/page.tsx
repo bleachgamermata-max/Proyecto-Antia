@@ -77,21 +77,36 @@ export default function TipsterDashboard() {
           </div>
 
           <nav className="space-y-2">
-            <Link href="/dashboard/tipster" className="block px-4 py-2 rounded-lg bg-blue-50 text-blue-600 font-medium">
+            <button
+              onClick={() => setActiveView('dashboard')}
+              className={`w-full text-left px-4 py-2 rounded-lg ${activeView === 'dashboard' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
+            >
               Dashboard
-            </Link>
-            <Link href="/dashboard/tipster/products" className="block px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50">
+            </button>
+            <button
+              onClick={() => setActiveView('products')}
+              className={`w-full text-left px-4 py-2 rounded-lg ${activeView === 'products' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
+            >
               Mis Productos
-            </Link>
-            <Link href="/dashboard/tipster/referrals" className="block px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50">
+            </button>
+            <button
+              onClick={() => setActiveView('referrals')}
+              className={`w-full text-left px-4 py-2 rounded-lg ${activeView === 'referrals' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
+            >
               Afiliación
-            </Link>
-            <Link href="/dashboard/tipster/payouts" className="block px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50">
+            </button>
+            <button
+              onClick={() => setActiveView('payouts')}
+              className={`w-full text-left px-4 py-2 rounded-lg ${activeView === 'payouts' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
+            >
               Liquidaciones
-            </Link>
-            <Link href="/dashboard/tipster/profile" className="block px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50">
+            </button>
+            <button
+              onClick={() => setActiveView('profile')}
+              className={`w-full text-left px-4 py-2 rounded-lg ${activeView === 'profile' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
+            >
               Perfil
-            </Link>
+            </button>
             <button
               onClick={handleLogout}
               className="w-full text-left px-4 py-2 rounded-lg text-red-600 hover:bg-red-50"

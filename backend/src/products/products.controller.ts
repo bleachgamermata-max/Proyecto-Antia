@@ -80,6 +80,9 @@ export class ProductsController {
   @Roles('TIPSTER')
   @ApiOperation({ summary: 'Get checkout link for product' })
   async getCheckoutLink(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.productsService.getCheckoutLink(id, user.tipsterProfile.id);
+    const tipsterProfile = await this.prisma.tipsterProfile.findUnique({
+      where: { userId: user.id },
+    });
+    return this.productsService.getCheckoutLink(id, tipsterProfile.id);
   }
 }

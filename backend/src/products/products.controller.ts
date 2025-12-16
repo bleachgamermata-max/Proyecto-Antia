@@ -57,14 +57,20 @@ export class ProductsController {
   @Roles('TIPSTER')
   @ApiOperation({ summary: 'Publish product (Tipster only)' })
   async publish(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.productsService.publish(id, user.tipsterProfile.id);
+    const tipsterProfile = await this.prisma.tipsterProfile.findUnique({
+      where: { userId: user.id },
+    });
+    return this.productsService.publish(id, tipsterProfile.id);
   }
 
   @Post(':id/pause')
   @Roles('TIPSTER')
   @ApiOperation({ summary: 'Pause product (Tipster only)' })
   async pause(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.productsService.pause(id, user.tipsterProfile.id);
+    const tipsterProfile = await this.prisma.tipsterProfile.findUnique({
+      where: { userId: user.id },
+    });
+    return this.productsService.pause(id, tipsterProfile.id);
   }
 
   @Get(':id/checkout-link')

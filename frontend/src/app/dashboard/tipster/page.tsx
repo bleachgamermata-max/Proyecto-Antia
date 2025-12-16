@@ -119,110 +119,261 @@ export default function TipsterDashboard() {
 
       {/* Main Content */}
       <main className="ml-64 p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Hola Fausto, Bienvenido de nuevo!</h1>
-          <p className="text-gray-600 mt-1">Aquí está un resumen de tu actividad</p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-gray-500">Productos Activos</div>
-              <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+8.5%</div>
+        {activeView === 'dashboard' && (
+          <>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Hola Fausto, Bienvenido de nuevo!</h1>
+              <p className="text-gray-600 mt-1">Aquí está un resumen de tu actividad</p>
             </div>
-            <div className="text-3xl font-bold text-gray-900">{products.length}</div>
-            <div className="text-xs text-gray-500 mt-1">{products.filter((p: any) => p.active).length} activos</div>
-          </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-gray-500">Clicks Únicos</div>
-              <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+1.3%</div>
-            </div>
-            <div className="text-3xl font-bold text-gray-900">{metrics?.clicks || 0}</div>
-            <div className="text-xs text-gray-500 mt-1">Este mes</div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-gray-500">Registros</div>
-              <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+4.3%</div>
-            </div>
-            <div className="text-3xl font-bold text-gray-900">{metrics?.registers || 0}</div>
-            <div className="text-xs text-gray-500 mt-1">Conversión: {metrics?.conversionRate || 0}%</div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-gray-500">Ingresos</div>
-              <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+1.8%</div>
-            </div>
-            <div className="text-3xl font-bold text-gray-900">€{(metrics?.totalDeposits / 100 || 0).toFixed(2)}</div>
-            <div className="text-xs text-gray-500 mt-1">Este mes</div>
-          </div>
-        </div>
-
-        {/* Products Section */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">Mis Productos</h2>
-              <Link
-                href="/dashboard/tipster/products/new"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
-              >
-                + Crear Producto
-              </Link>
-            </div>
-          </div>
-          
-          <div className="p-6">
-            {products.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500 mb-4">No tienes productos aún</p>
-                <Link
-                  href="/dashboard/tipster/products/new"
-                  className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
-                >
-                  Crear tu primer producto
-                </Link>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm text-gray-500">Productos Activos</div>
+                  <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+8.5%</div>
+                </div>
+                <div className="text-3xl font-bold text-gray-900">{products.length}</div>
+                <div className="text-xs text-gray-500 mt-1">{products.filter((p: any) => p.active).length} activos</div>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {products.map((product: any) => (
-                  <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{product.title}</h3>
-                        <p className="text-sm text-gray-500 mt-1">{product.description}</p>
-                        <div className="flex items-center gap-4 mt-2">
-                          <span className="text-sm font-medium text-green-600">
-                            €{(product.priceCents / 100).toFixed(2)}
-                          </span>
-                          <span className={`text-xs px-2 py-1 rounded ${product.active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                            {product.active ? 'Activo' : 'Pausado'}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {product.billingType === 'SUBSCRIPTION' ? 'Suscripción' : 'Pago único'}
-                          </span>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm text-gray-500">Clicks Únicos</div>
+                  <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+1.3%</div>
+                </div>
+                <div className="text-3xl font-bold text-gray-900">{metrics?.clicks || 0}</div>
+                <div className="text-xs text-gray-500 mt-1">Este mes</div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm text-gray-500">Registros</div>
+                  <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+4.3%</div>
+                </div>
+                <div className="text-3xl font-bold text-gray-900">{metrics?.registers || 0}</div>
+                <div className="text-xs text-gray-500 mt-1">Conversión: {metrics?.conversionRate || 0}%</div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm text-gray-500">Ingresos</div>
+                  <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+1.8%</div>
+                </div>
+                <div className="text-3xl font-bold text-gray-900">€{(metrics?.totalDeposits / 100 || 0).toFixed(2)}</div>
+                <div className="text-xs text-gray-500 mt-1">Este mes</div>
+              </div>
+            </div>
+
+            {/* Products Preview */}
+            <div className="bg-white rounded-lg shadow">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-gray-900">Mis Productos</h2>
+                  <button
+                    onClick={() => setActiveView('products')}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+                  >
+                    Ver todos
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                {products.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500 mb-4">No tienes productos aún</p>
+                    <button
+                      onClick={() => setActiveView('products')}
+                      className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+                    >
+                      Crear tu primer producto
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {products.slice(0, 3).map((product: any) => (
+                      <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{product.title}</h3>
+                            <p className="text-sm text-gray-500 mt-1">{product.description}</p>
+                            <div className="flex items-center gap-4 mt-2">
+                              <span className="text-sm font-medium text-green-600">
+                                €{(product.priceCents / 100).toFixed(2)}
+                              </span>
+                              <span className={`text-xs px-2 py-1 rounded ${product.active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                {product.active ? 'Activo' : 'Pausado'}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {product.billingType === 'SUBSCRIPTION' ? 'Suscripción' : 'Pago único'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+                              Ver
+                            </button>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/dashboard/tipster/products/${product.id}`}
-                          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
-                        >
-                          Ver
-                        </Link>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          </>
+        )}
+
+        {activeView === 'products' && (
+          <>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Mis Productos</h1>
+              <p className="text-gray-600 mt-1">Gestiona tus pronósticos y suscripciones</p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-gray-900">Lista de Productos</h2>
+                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+                    + Crear Producto
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                {products.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500 mb-4">No tienes productos aún</p>
+                    <button className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                      Crear tu primer producto
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {products.map((product: any) => (
+                      <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-900">{product.title}</h3>
+                            <p className="text-sm text-gray-500 mt-1">{product.description}</p>
+                            <div className="flex items-center gap-4 mt-2">
+                              <span className="text-sm font-medium text-green-600">
+                                €{(product.priceCents / 100).toFixed(2)}
+                              </span>
+                              <span className={`text-xs px-2 py-1 rounded ${product.active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                {product.active ? 'Activo' : 'Pausado'}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {product.billingType === 'SUBSCRIPTION' ? 'Suscripción' : 'Pago único'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+                              Editar
+                            </button>
+                            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                              Ver
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeView === 'referrals' && (
+          <>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Afiliación</h1>
+              <p className="text-gray-600 mt-1">Gestiona tus enlaces de afiliado y comisiones</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="text-sm text-gray-500 mb-2">Clicks Totales</div>
+                <div className="text-3xl font-bold text-gray-900">{metrics?.clicks || 0}</div>
+              </div>
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="text-sm text-gray-500 mb-2">Registros</div>
+                <div className="text-3xl font-bold text-gray-900">{metrics?.registers || 0}</div>
+              </div>
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="text-sm text-gray-500 mb-2">FTDs</div>
+                <div className="text-3xl font-bold text-gray-900">{metrics?.ftds || 0}</div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Enlaces de Afiliado</h2>
+              <p className="text-gray-500">Funcionalidad en desarrollo</p>
+            </div>
+          </>
+        )}
+
+        {activeView === 'payouts' && (
+          <>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Liquidaciones</h1>
+              <p className="text-gray-600 mt-1">Historial de pagos y comisiones</p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Historial de Pagos</h2>
+              <div className="text-center py-12">
+                <p className="text-gray-500">No hay liquidaciones aún</p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeView === 'profile' && (
+          <>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Mi Perfil</h1>
+              <p className="text-gray-600 mt-1">Configuración de tu cuenta</p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Información Personal</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Público</label>
+                  <input 
+                    type="text" 
+                    defaultValue="Fausto Perez"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input 
+                    type="email" 
+                    defaultValue="fausto.perez@antia.com"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Usuario de Telegram</label>
+                  <input 
+                    type="text" 
+                    placeholder="@tu_usuario"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                  Guardar Cambios
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </main>
     </div>
   );

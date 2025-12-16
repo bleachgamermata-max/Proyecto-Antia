@@ -341,15 +341,8 @@ export class TelegramService implements OnModuleInit {
   private async handleProductPurchaseFlow(ctx: any, productId: string) {
     try {
       // 1. Obtener información del producto
-      const product = await this.prisma.product.findUnique({
+      const product: any = await this.prisma.product.findUnique({
         where: { id: productId },
-        include: {
-          tipster: {
-            include: {
-              user: true,
-            },
-          },
-        },
       });
 
       if (!product || !product.active) {
@@ -357,13 +350,18 @@ export class TelegramService implements OnModuleInit {
         return;
       }
 
+      // Obtener tipster
+      const tipster: any = await this.prisma.tipsterProfile.findUnique({
+        where: { id: product.tipsterId },
+      });
+
       const userId = ctx.from.id.toString();
       const username = ctx.from.username || ctx.from.first_name || 'Usuario';
 
       // 2. Mensaje de bienvenida
       await ctx.reply(
         `🎯 *¡Bienvenido a Antia!*\n\n` +
-        `Estás a punto de adquirir un pronóstico de *${product.tipster.publicName}*\n\n` +
+        `Estás a punto de adquirir un pronóstico de *${tipster?.publicName || 'Tipster'}*\n\n` +
         `Para continuar, necesitamos que aceptes nuestros términos.`,
         { parse_mode: 'Markdown' }
       );
@@ -441,17 +439,18 @@ export class TelegramService implements OnModuleInit {
    */
   private async showProductDetails(ctx: any, productId: string) {
     try {
-      const product = await this.prisma.product.findUnique({
+      const product: any = await this.prisma.product.findUnique({
         where: { id: productId },
-        include: {
-          tipster: true,
-        },
       });
 
       if (!product) {
         await ctx.reply('❌ Producto no encontrado.');
         return;
       }
+
+      const tipster: any = await this.prisma.tipsterProfile.findUnique({
+        where: { id: product.tipsterId },
+      });
 
       const price = (product.priceCents / 100).toFixed(2);
       
@@ -460,7 +459,7 @@ export class TelegramService implements OnModuleInit {
         `${product.description || 'Pronóstico premium'}\n\n` +
         `💰 *Precio:* €${price}\n` +
         `📅 *Validez:* ${product.validityDays || 30} días\n` +
-        `👤 *Tipster:* ${product.tipster.publicName}\n\n` +
+        `👤 *Tipster:* ${tipster?.publicName || 'Tipster'}\n\n` +
         `Al completar la compra, recibirás acceso inmediato al canal premium del tipster.`;
 
       await ctx.reply(productMessage, {
@@ -486,11 +485,8 @@ export class TelegramService implements OnModuleInit {
    */
   private async generateCheckoutLink(ctx: any, productId: string) {
     try {
-      const product = await this.prisma.product.findUnique({
+      const product: any = await this.prisma.product.findUnique({
         where: { id: productId },
-        include: {
-          tipster: true,
-        },
       });
 
       if (!product) {
@@ -578,21 +574,27 @@ export class TelegramService implements OnModuleInit {
   async notifyPaymentSuccess(telegramUserId: string, orderId: string, productId: string) {
     try {
       // Obtener producto e información del tipster
-      const product = await this.prisma.product.findUnique({
+      const product: any = await this.prisma.product.findUnique({
         where: { id: productId },
-        include: {
-          tipster: true,
-        },
       });
 
-      if (!product || !product.tipster.telegramChannelId) {
-        this.logger.error('Product or channel not found for notification');
+      if (!product) {
+        this.logger.error('Product not found for notification');
+        return;
+      }
+
+      const tipster: any = await this.prisma.tipsterProfile.findUnique({
+        where: { id: product.tipsterId },
+      });
+
+      if (!tipster || !tipster.telegramChannelId) {
+        this.logger.error('Tipster or channel not found for notification');
         return;
       }
 
       // Generar link de invitación al canal premium
       const inviteLink = await this.bot.telegram.createChatInviteLink(
-        product.tipster.telegramChannelId,
+        tipster.telegramChannelId,
         {
           member_limit: 1, // Link de un solo uso
           expire_date: Math.floor(Date.now() / 1000) + 86400, // Expira en 24 horas
@@ -604,7 +606,7 @@ export class TelegramService implements OnModuleInit {
         `✅ *¡Pago Confirmado!*\n\n` +
         `Gracias por tu compra. Tu pago ha sido procesado exitosamente.\n\n` +
         `🎯 *Producto:* ${product.title}\n` +
-        `👤 *Tipster:* ${product.tipster.publicName}\n\n` +
+        `👤 *Tipster:* ${tipster.publicName}\n\n` +
         `📱 *Acceso al Canal Premium*\n` +
         `Haz clic en el botón de abajo para unirte al canal exclusivo del tipster y recibir los pronósticos.`;
 

@@ -82,20 +82,23 @@ model Product {
 }
 
 model Order {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  productId       String   @map("product_id")
-  tipsterId       String   @map("tipster_id")
-  clientUserId    String?  @map("client_user_id")
-  emailBackup     String   @map("email_backup")
-  phoneBackup     String?  @map("phone_backup")
-  amountCents     Int      @map("amount_cents")
-  currency        String   @default("EUR")
-  paymentProvider String   @map("payment_provider")
-  providerOrderId String?  @map("provider_order_id")
-  status          String   @default("CREATED") // CREATED, PAGADA, PAGADA_SIN_ACCESO, ACCESS_GRANTED, REFUNDED, EXPIRED
-  meta            Json?
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId        String   @map("product_id")
+  tipsterId        String?  @map("tipster_id")
+  clientUserId     String?  @map("client_user_id")
+  telegramUserId   String?  @map("telegram_user_id")    // ID de Telegram del cliente
+  telegramUsername String?  @map("telegram_username")   // Username de Telegram
+  emailBackup      String?  @map("email_backup")
+  phoneBackup      String?  @map("phone_backup")
+  amountCents      Int?     @map("amount_cents")
+  currency         String   @default("EUR")
+  paymentProvider  String?  @map("payment_provider")
+  paymentMethod    String?  @map("payment_method")
+  providerOrderId  String?  @map("provider_order_id")
+  status           String   @default("PENDING") // PENDING, CREATED, PAGADA, PAGADA_SIN_ACCESO, ACCESS_GRANTED, REFUNDED, EXPIRED
+  meta             Json?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   @@map("orders")
 }

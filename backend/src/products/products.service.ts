@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto, UpdateProductDto } from './dto';
 
 @Injectable()
 export class ProductsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private moduleRef: ModuleRef,
+  ) {}
 
   async create(tipsterId: string, dto: CreateProductDto) {
     // Use $runCommandRaw to bypass transaction requirement
@@ -167,9 +171,9 @@ export class ProductsService {
   }
 
   async publishToTelegram(productId: string, userId: string) {
-    // Lazy load TelegramService to avoid circular dependency
+    // Dynamically resolve TelegramService to avoid circular dependency
     const { TelegramService } = await import('../telegram/telegram.service');
-    const telegramService = new TelegramService(this.prisma, null);
+    const telegramService = this.moduleRef.get(TelegramService, { strict: false });
 
     // Get tipster profile
     const tipsterProfile = await this.prisma.tipsterProfile.findUnique({

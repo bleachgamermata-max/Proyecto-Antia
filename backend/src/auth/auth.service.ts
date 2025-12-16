@@ -68,31 +68,42 @@ export class AuthService {
     // Hash password
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
-    // Create user
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        phone: dto.phone,
-        passwordHash,
-        role: 'TIPSTER',
-        status: 'PENDING', // Needs admin approval
-      },
-    });
+    try {
+      // Create user first
+      const user = await this.prisma.user.create({
+        data: {
+          email: dto.email,
+          phone: dto.phone,
+          password_hash: passwordHash,
+          role: 'TIPSTER',
+          status: 'ACTIVE', // Changed to ACTIVE for demo
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      });
 
-    // Create tipster profile separately
-    await this.prisma.tipsterProfile.create({
-      data: {
+      // Create tipster profile separately
+      await this.prisma.tipsterProfile.create({
+        data: {
+          user_id: user.id,
+          public_name: dto.name,
+          telegram_username: dto.telegramUsername,
+          locale: 'es',
+          timezone: 'Europe/Madrid',
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      });
+
+      return {
+        message: 'Tipster registered successfully.',
         userId: user.id,
-        publicName: dto.name,
-        telegramUsername: dto.telegramUsername,
-      },
-    });
-
-    return {
-      message: 'Tipster registration submitted. Waiting for admin approval.',
-      userId: user.id,
-      status: user.status,
-    };
+        status: user.status,
+      };
+    } catch (error) {
+      console.error('Error registering tipster:', error);
+      throw new Error('Error creating tipster account');
+    }
   }
 
   async registerClient(dto: RegisterClientDto) {
@@ -106,28 +117,39 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        phone: dto.phone,
-        passwordHash,
-        role: 'CLIENT',
-        status: 'ACTIVE',
-      },
-    });
+    try {
+      const user = await this.prisma.user.create({
+        data: {
+          email: dto.email,
+          phone: dto.phone,
+          password_hash: passwordHash,
+          role: 'CLIENT',
+          status: 'ACTIVE',
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      });
 
-    // Create client profile separately
-    await this.prisma.clientProfile.create({
-      data: {
-        userId: user.id,
-        countryIso: dto.countryIso,
-        consent18: dto.consent18,
-        consentTerms: dto.consentTerms,
-        consentPrivacy: dto.consentPrivacy,
-      },
-    });
+      // Create client profile separately
+      await this.prisma.clientProfile.create({
+        data: {
+          user_id: user.id,
+          country_iso: dto.countryIso,
+          consent_18: dto.consent18,
+          consent_terms: dto.consentTerms,
+          consent_privacy: dto.consentPrivacy,
+          locale: 'es',
+          timezone: 'Europe/Madrid',
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      });
 
-    return this.login(user);
+      return this.login(user);
+    } catch (error) {
+      console.error('Error registering client:', error);
+      throw new Error('Error creating client account');
+    }
   }
 
   async sendOtp(email: string, kind: 'EMAIL' | 'PHONE') {

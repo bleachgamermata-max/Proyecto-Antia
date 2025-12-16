@@ -23,19 +23,24 @@ model User {
 }
 
 model TipsterProfile {
-  id               String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId           String    @unique @map("user_id")
-  publicName       String    @map("public_name")
-  avatarUrl        String?   @map("avatar_url")
-  telegramUsername String?   @map("telegram_username")
-  telegramUserId   String?   @map("telegram_user_id")
-  botLinkedAt      DateTime? @map("bot_linked_at")
-  payoutMethod     String?   @map("payout_method") // IBAN, PAYPAL, USDT
-  payoutFields     Json?     @map("payout_fields")
-  locale           String    @default("es")
-  timezone         String    @default("Europe/Madrid")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  id                    String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId                String    @unique @map("user_id")
+  publicName            String    @map("public_name")
+  avatarUrl             String?   @map("avatar_url")
+  telegramUsername      String?   @map("telegram_username")
+  telegramUserId        String?   @map("telegram_user_id")
+  telegramChannelId     String?   @map("telegram_channel_id")     // ID del canal de Telegram
+  telegramChannelName   String?   @map("telegram_channel_name")   // @username del canal
+  telegramChannelTitle  String?   @map("telegram_channel_title")  // Título del canal
+  telegramConnectedAt   DateTime? @map("telegram_connected_at")   // Cuándo se conectó el canal
+  telegramConnectionType String?  @map("telegram_connection_type") // "manual" o "auto"
+  botLinkedAt           DateTime? @map("bot_linked_at")
+  payoutMethod          String?   @map("payout_method") // IBAN, PAYPAL, USDT
+  payoutFields          Json?     @map("payout_fields")
+  locale                String    @default("es")
+  timezone              String    @default("Europe/Madrid")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
 
   @@map("tipster_profiles")
 }

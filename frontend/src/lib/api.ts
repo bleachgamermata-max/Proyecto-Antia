@@ -24,10 +24,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token inválido o expirado
-      localStorage.removeItem('access_token');
-      // Solo redirigir si NO estamos en la página de login
-      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+      // Solo redirigir y limpiar token si NO estamos en páginas públicas
+      const publicPaths = ['/login', '/register', '/'];
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+      
+      if (!publicPaths.includes(currentPath)) {
+        // Token inválido o expirado en páginas protegidas
+        localStorage.removeItem('access_token');
         window.location.href = '/login';
       }
     }

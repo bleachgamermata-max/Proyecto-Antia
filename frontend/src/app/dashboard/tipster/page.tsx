@@ -29,6 +29,12 @@ export default function TipsterDashboard() {
   const [formError, setFormError] = useState('');
 
   useEffect(() => {
+    // Verificar autenticación antes de cargar datos
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
     loadData();
   }, []);
 

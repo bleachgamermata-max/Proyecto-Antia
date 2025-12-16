@@ -13,8 +13,13 @@ export const api = axios.create({
 // Interceptor para agregar el token a las peticiones
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
+  console.log('🔑 Request interceptor - Token exists:', !!token);
+  console.log('📍 Request to:', config.url);
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+    console.log('✅ Authorization header set');
+  } else {
+    console.log('❌ No token found in localStorage');
   }
   return config;
 });
@@ -24,14 +29,21 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      console.log('🚨 401 Error detected');
+      console.log('   URL:', error.config?.url);
+      console.log('   Current path:', window.location.pathname);
+      
       // Solo redirigir y limpiar token si NO estamos en páginas públicas
       const publicPaths = ['/login', '/register', '/'];
       const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
       
       if (!publicPaths.includes(currentPath)) {
+        console.log('⚠️  Redirecting to login from:', currentPath);
         // Token inválido o expirado en páginas protegidas
         localStorage.removeItem('access_token');
         window.location.href = '/login';
+      } else {
+        console.log('ℹ️  On public page, not redirecting');
       }
     }
     return Promise.reject(error);

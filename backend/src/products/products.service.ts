@@ -9,6 +9,8 @@ export class ProductsService {
   async create(tipsterId: string, dto: CreateProductDto) {
     // Use $runCommandRaw to bypass transaction requirement
     // IMPORTANT: Use snake_case field names to match Prisma @map() mapping in schema
+    // IMPORTANT: Use { $date: ISOString } format for BSON dates
+    const now = new Date().toISOString();
     const productData = {
       tipster_id: tipsterId,  // snake_case to match Prisma mapping
       title: dto.title,
@@ -22,12 +24,12 @@ export class ProductsService {
       telegram_channel_id: dto.telegramChannelId || null,  // snake_case
       access_mode: dto.accessMode || 'AUTO_JOIN',  // snake_case
       validity_days: dto.validityDays || null,  // snake_case
-      created_at: new Date(),  // snake_case
-      updated_at: new Date(),  // snake_case
+      created_at: { $date: now },  // BSON date format
+      updated_at: { $date: now },  // BSON date format
     };
 
     // Insert directly using MongoDB driver to avoid transaction
-    const result: any = await this.prisma.$runCommandRaw({
+    await this.prisma.$runCommandRaw({
       insert: 'products',
       documents: [productData],
     });

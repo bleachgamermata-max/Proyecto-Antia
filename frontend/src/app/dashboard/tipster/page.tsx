@@ -313,6 +313,19 @@ export default function TipsterDashboard() {
               Mis Productos
             </button>
             <button
+              onClick={() => setActiveView('telegram')}
+              className={`w-full text-left px-4 py-2 rounded-lg ${activeView === 'telegram' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
+            >
+              <span className="flex items-center justify-between">
+                <span>📱 Telegram</span>
+                {telegramConnected && (
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                    ✓
+                  </span>
+                )}
+              </span>
+            </button>
+            <button
               onClick={() => setActiveView('referrals')}
               className={`w-full text-left px-4 py-2 rounded-lg ${activeView === 'referrals' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
             >

@@ -8,21 +8,22 @@ export class ProductsService {
 
   async create(tipsterId: string, dto: CreateProductDto) {
     // Use $runCommandRaw to bypass transaction requirement
+    // IMPORTANT: Use snake_case field names to match Prisma @map() mapping in schema
     const productData = {
-      tipsterId,
+      tipster_id: tipsterId,  // snake_case to match Prisma mapping
       title: dto.title,
       description: dto.description || null,
-      priceCents: dto.priceCents,
+      price_cents: dto.priceCents,  // snake_case
       currency: dto.currency || 'EUR',
-      billingType: dto.billingType,
-      billingPeriod: dto.billingPeriod || null,
-      capacityLimit: dto.capacityLimit || null,
+      billing_type: dto.billingType,  // snake_case
+      billing_period: dto.billingPeriod || null,  // snake_case
+      capacity_limit: dto.capacityLimit || null,  // snake_case
       active: true,
-      telegramChannelId: dto.telegramChannelId || null,
-      accessMode: dto.accessMode || 'AUTO_JOIN',
-      validityDays: dto.validityDays || null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      telegram_channel_id: dto.telegramChannelId || null,  // snake_case
+      access_mode: dto.accessMode || 'AUTO_JOIN',  // snake_case
+      validity_days: dto.validityDays || null,  // snake_case
+      created_at: new Date(),  // snake_case
+      updated_at: new Date(),  // snake_case
     };
 
     // Insert directly using MongoDB driver to avoid transaction
@@ -31,26 +32,17 @@ export class ProductsService {
       documents: [productData],
     });
 
-    // MongoDB insertOne returns the inserted IDs
-    const insertedId = result.insertedIds?.[0] || result.writeErrors?.[0]?.errmsg;
-    
-    if (!insertedId) {
-      // If we can't get the ID, find by title and most recent
-      const products = await this.prisma.product.findMany({
-        where: { 
-          tipsterId,
-          title: dto.title 
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 1,
-      });
-      return products[0];
-    }
-
-    // Fetch the created product by ID
-    return this.prisma.product.findUnique({
-      where: { id: insertedId.toString() },
+    // Fetch the most recently created product by this tipster with this title
+    const products = await this.prisma.product.findMany({
+      where: { 
+        tipsterId,
+        title: dto.title 
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 1,
     });
+    
+    return products[0] || null;
   }
 
   async findAllByTipster(tipsterId: string) {

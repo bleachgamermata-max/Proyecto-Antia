@@ -278,17 +278,18 @@ class AntiaAPITester:
         try:
             response = self.make_request("POST", f"/products/{self.test_product_id}/publish")
             
-            if response.status_code == 200:
+            if response.status_code in [200, 201]:  # Accept both 200 and 201
                 product = response.json()
                 self.log("✅ Product published successfully")
                 
                 # Check if product is active
                 if product.get("active") == True:
                     self.log("✅ Product active status is true")
+                    return True
                 else:
                     self.log("❌ Product active status not updated correctly", "ERROR")
+                    return False
                     
-                return True
             else:
                 self.log(f"❌ Publish product failed with status {response.status_code}", "ERROR")
                 return False

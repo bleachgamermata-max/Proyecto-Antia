@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { productsApi, referralsApi, payoutsApi, authApi } from '@/lib/api';
+import { productsApi, referralsApi, payoutsApi, authApi, telegramApi } from '@/lib/api';
 
-type ViewType = 'dashboard' | 'products' | 'referrals' | 'payouts' | 'profile';
+type ViewType = 'dashboard' | 'products' | 'referrals' | 'payouts' | 'profile' | 'telegram';
 
 export default function TipsterDashboard() {
   const router = useRouter();
@@ -27,6 +27,14 @@ export default function TipsterDashboard() {
   });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  
+  // Telegram state
+  const [telegramChannel, setTelegramChannel] = useState<any>(null);
+  const [telegramConnected, setTelegramConnected] = useState(false);
+  const [telegramLoading, setTelegramLoading] = useState(false);
+  const [telegramChannelInput, setTelegramChannelInput] = useState('');
+  const [telegramError, setTelegramError] = useState('');
+  const [publishingProduct, setPublishingProduct] = useState<string | null>(null);
 
   useEffect(() => {
     // Verificar autenticación antes de cargar datos

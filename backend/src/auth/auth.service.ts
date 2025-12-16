@@ -118,26 +118,22 @@ export class AuthService {
         data: {
           email: dto.email,
           phone: dto.phone,
-          password_hash: passwordHash,
+          passwordHash: passwordHash,
           role: 'CLIENT',
           status: 'ACTIVE',
-          created_at: new Date(),
-          updated_at: new Date(),
         },
       });
 
       // Create client profile separately
       await this.prisma.clientProfile.create({
         data: {
-          user_id: user.id,
-          country_iso: dto.countryIso,
-          consent_18: dto.consent18,
-          consent_terms: dto.consentTerms,
-          consent_privacy: dto.consentPrivacy,
+          userId: user.id,
+          countryIso: dto.countryIso,
+          consent18: dto.consent18,
+          consentTerms: dto.consentTerms,
+          consentPrivacy: dto.consentPrivacy,
           locale: 'es',
           timezone: 'Europe/Madrid',
-          created_at: new Date(),
-          updated_at: new Date(),
         },
       });
 

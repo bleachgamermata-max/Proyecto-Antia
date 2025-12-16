@@ -335,6 +335,296 @@ export class TelegramService implements OnModuleInit {
   }
 
   /**
+   * FLUJO DE COMPRA DEL CLIENTE
+   */
+  private async handleProductPurchaseFlow(ctx: any, productId: string) {
+    try {
+      // 1. Obtener información del producto
+      const product = await this.prisma.product.findUnique({
+        where: { id: productId },
+        include: {
+          tipster: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      });
+
+      if (!product || !product.active) {
+        await ctx.reply('❌ Este producto ya no está disponible.');
+        return;
+      }
+
+      const userId = ctx.from.id.toString();
+      const username = ctx.from.username || ctx.from.first_name || 'Usuario';
+
+      // 2. Mensaje de bienvenida
+      await ctx.reply(
+        `🎯 *¡Bienvenido a Antia!*\n\n` +
+        `Estás a punto de adquirir un pronóstico de *${product.tipster.publicName}*\n\n` +
+        `Para continuar, necesitamos que aceptes nuestros términos.`,
+        { parse_mode: 'Markdown' }
+      );
+
+      // 3. Mostrar términos y condiciones
+      await this.showTermsAndConditions(ctx, productId);
+      
+    } catch (error) {
+      this.logger.error('Error in handleProductPurchaseFlow:', error);
+      await ctx.reply('Hubo un error al procesar tu solicitud. Por favor, intenta nuevamente.');
+    }
+  }
+
+  /**
+   * Mostrar términos y condiciones
+   */
+  private async showTermsAndConditions(ctx: any, productId: string) {
+    const termsMessage = 
+      `📋 *Términos y Condiciones*\n\n` +
+      `Antes de continuar, confirma lo siguiente:\n\n` +
+      `✅ Soy mayor de 18 años\n` +
+      `✅ Acepto los términos y condiciones de Antia\n` +
+      `✅ Entiendo que las apuestas pueden generar pérdidas\n` +
+      `✅ Acepto la política de privacidad\n\n` +
+      `¿Aceptas estos términos?`;
+
+    await ctx.reply(termsMessage, {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: '✅ Aceptar', callback_data: `accept_terms_${productId}` },
+            { text: '❌ Cancelar', callback_data: 'cancel_purchase' },
+          ],
+        ],
+      },
+    });
+  }
+
+  /**
+   * Handler para callbacks (botones inline)
+   */
+  private setupCallbackHandlers() {
+    // Aceptar términos
+    this.bot.action(/accept_terms_(.+)/, async (ctx) => {
+      try {
+        await ctx.answerCbQuery();
+        const productId = ctx.match[1];
+        await this.showProductDetails(ctx, productId);
+      } catch (error) {
+        this.logger.error('Error in accept_terms callback:', error);
+      }
+    });
+
+    // Cancelar compra
+    this.bot.action('cancel_purchase', async (ctx) => {
+      await ctx.answerCbQuery();
+      await ctx.reply('Compra cancelada. Si cambias de opinión, vuelve a usar el link del producto.');
+    });
+
+    // Proceder al pago
+    this.bot.action(/proceed_payment_(.+)/, async (ctx) => {
+      try {
+        await ctx.answerCbQuery();
+        const productId = ctx.match[1];
+        await this.generateCheckoutLink(ctx, productId);
+      } catch (error) {
+        this.logger.error('Error in proceed_payment callback:', error);
+      }
+    });
+  }
+
+  /**
+   * Mostrar detalles del producto
+   */
+  private async showProductDetails(ctx: any, productId: string) {
+    try {
+      const product = await this.prisma.product.findUnique({
+        where: { id: productId },
+        include: {
+          tipster: true,
+        },
+      });
+
+      if (!product) {
+        await ctx.reply('❌ Producto no encontrado.');
+        return;
+      }
+
+      const price = (product.priceCents / 100).toFixed(2);
+      
+      const productMessage = 
+        `🎯 *${product.title}*\n\n` +
+        `${product.description || 'Pronóstico premium'}\n\n` +
+        `💰 *Precio:* €${price}\n` +
+        `📅 *Validez:* ${product.validityDays || 30} días\n` +
+        `👤 *Tipster:* ${product.tipster.publicName}\n\n` +
+        `Al completar la compra, recibirás acceso inmediato al canal premium del tipster.`;
+
+      await ctx.reply(productMessage, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '💳 Proceder al Pago', callback_data: `proceed_payment_${productId}` },
+            ],
+            [
+              { text: '❌ Cancelar', callback_data: 'cancel_purchase' },
+            ],
+          ],
+        },
+      });
+    } catch (error) {
+      this.logger.error('Error showing product details:', error);
+    }
+  }
+
+  /**
+   * Generar link de checkout
+   */
+  private async generateCheckoutLink(ctx: any, productId: string) {
+    try {
+      const product = await this.prisma.product.findUnique({
+        where: { id: productId },
+        include: {
+          tipster: true,
+        },
+      });
+
+      if (!product) {
+        await ctx.reply('❌ Producto no encontrado.');
+        return;
+      }
+
+      const userId = ctx.from.id.toString();
+      const username = ctx.from.username || ctx.from.first_name;
+
+      // Crear orden pendiente
+      const orderId = await this.createPendingOrder(productId, userId, username);
+
+      // Generar link de checkout (simulado por ahora)
+      const checkoutUrl = `${process.env.APP_URL}/checkout?order=${orderId}&product=${productId}`;
+
+      await ctx.reply(
+        `💳 *Realizar Pago*\n\n` +
+        `Haz clic en el botón de abajo para ir a la página de pago segura.\n\n` +
+        `Podrás pagar como:\n` +
+        `• 👤 Usuario registrado (más rápido)\n` +
+        `• 🕶️ Usuario anónimo (solo email o teléfono)\n\n` +
+        `Métodos de pago: Tarjeta, PayPal, Crypto`,
+        {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '💳 Ir a Pagar', url: checkoutUrl },
+              ],
+            ],
+          },
+        }
+      );
+
+      // Mensaje informativo
+      await ctx.reply(
+        `⏳ Una vez que completes el pago, regresa aquí.\n` +
+        `Te notificaré automáticamente cuando el pago sea confirmado y te daré acceso al canal premium.`
+      );
+
+    } catch (error) {
+      this.logger.error('Error generating checkout link:', error);
+      await ctx.reply('Hubo un error al generar el link de pago. Por favor, intenta nuevamente.');
+    }
+  }
+
+  /**
+   * Crear orden pendiente
+   */
+  private async createPendingOrder(productId: string, telegramUserId: string, username: string): Promise<string> {
+    const orderId = this.generateOrderId();
+    const now = new Date();
+
+    // Guardar orden en base de datos
+    await this.prisma.$runCommandRaw({
+      insert: 'orders',
+      documents: [{
+        _id: orderId,
+        product_id: productId,
+        telegram_user_id: telegramUserId,
+        telegram_username: username,
+        status: 'PENDING',
+        payment_method: null,
+        amount_cents: null,
+        created_at: { $date: now.toISOString() },
+        updated_at: { $date: now.toISOString() },
+      }],
+    });
+
+    this.logger.log(`Created pending order ${orderId} for Telegram user ${telegramUserId}`);
+    return orderId;
+  }
+
+  /**
+   * Generar ID de orden
+   */
+  private generateOrderId(): string {
+    return 'order_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  }
+
+  /**
+   * Notificar al cliente sobre pago exitoso
+   */
+  async notifyPaymentSuccess(telegramUserId: string, orderId: string, productId: string) {
+    try {
+      // Obtener producto e información del tipster
+      const product = await this.prisma.product.findUnique({
+        where: { id: productId },
+        include: {
+          tipster: true,
+        },
+      });
+
+      if (!product || !product.tipster.telegramChannelId) {
+        this.logger.error('Product or channel not found for notification');
+        return;
+      }
+
+      // Generar link de invitación al canal premium
+      const inviteLink = await this.bot.telegram.createChatInviteLink(
+        product.tipster.telegramChannelId,
+        {
+          member_limit: 1, // Link de un solo uso
+          expire_date: Math.floor(Date.now() / 1000) + 86400, // Expira en 24 horas
+        }
+      );
+
+      // Mensaje de éxito
+      const successMessage = 
+        `✅ *¡Pago Confirmado!*\n\n` +
+        `Gracias por tu compra. Tu pago ha sido procesado exitosamente.\n\n` +
+        `🎯 *Producto:* ${product.title}\n` +
+        `👤 *Tipster:* ${product.tipster.publicName}\n\n` +
+        `📱 *Acceso al Canal Premium*\n` +
+        `Haz clic en el botón de abajo para unirte al canal exclusivo del tipster y recibir los pronósticos.`;
+
+      await this.bot.telegram.sendMessage(telegramUserId, successMessage, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '🚀 Unirme al Canal Premium', url: inviteLink.invite_link },
+            ],
+          ],
+        },
+      });
+
+      this.logger.log(`Payment success notification sent to ${telegramUserId}`);
+    } catch (error) {
+      this.logger.error('Error notifying payment success:', error);
+    }
+  }
+
+  /**
    * Verificar si un canal está conectado
    */
   async isChannelConnected(tipsterId: string): Promise<boolean> {

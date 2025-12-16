@@ -14,10 +14,10 @@ Sistema completo implementado con:
 ## 🌐 ACCESO A LA PLATAFORMA
 
 ### URLs de Acceso
-- **Frontend**: https://forecasthub-22.preview.emergentagent.com
-- **API Backend**: https://forecasthub-22.preview.emergentagent.com/api
-- **Swagger Docs**: https://forecasthub-22.preview.emergentagent.com/api/docs
-- **Health Check**: https://forecasthub-22.preview.emergentagent.com/api/health
+- **Frontend**: https://propicks.preview.emergentagent.com
+- **API Backend**: https://propicks.preview.emergentagent.com/api
+- **Swagger Docs**: https://propicks.preview.emergentagent.com/api/docs
+- **Health Check**: https://propicks.preview.emergentagent.com/api/health
 
 ### Credenciales de Prueba
 
@@ -474,7 +474,7 @@ El frontend está implementado siguiendo el diseño de Figma proporcionado:
 
 2. **Login Tipster:**
    ```
-   https://forecasthub-22.preview.emergentagent.com/login
+   https://propicks.preview.emergentagent.com/login
    → Accede con fausto.perez@antia.com / Tipster123!
    ```
 
@@ -496,7 +496,7 @@ El frontend está implementado siguiendo el diseño de Figma proporcionado:
    ```
    Simular webhook de pago con curl:
    
-   curl -X POST https://forecasthub-22.preview.emergentagent.com/api/webhooks/payments/confirm \
+   curl -X POST https://propicks.preview.emergentagent.com/api/webhooks/payments/confirm \
      -H "Content-Type: application/json" \
      -d '{
        "product_id": "PRODUCT_ID",
@@ -593,7 +593,7 @@ Propietario - Todos los derechos reservados © 2025 Antia
 
 El sistema está completamente operativo y listo para usar.
 
-**Accede ahora:** https://forecasthub-22.preview.emergentagent.com
+**Accede ahora:** https://propicks.preview.emergentagent.com
 
 **Credenciales:**
 - Tipster: fausto.perez@antia.com / Tipster123!

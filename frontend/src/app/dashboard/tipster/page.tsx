@@ -208,7 +208,7 @@ export default function TipsterDashboard() {
                   <div className="text-center py-12">
                     <p className="text-gray-500 mb-4">No tienes productos aún</p>
                     <button
-                      onClick={() => setActiveView('products')}
+                      onClick={handleCreateProduct}
                       className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
                     >
                       Crear tu primer producto

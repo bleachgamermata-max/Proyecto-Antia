@@ -56,6 +56,27 @@ export default function TipsterDashboard() {
     }
   };
 
+  const handleCreateProduct = () => {
+    setSelectedProduct(null);
+    setShowProductForm(true);
+  };
+
+  const handleEditProduct = (product: any) => {
+    setSelectedProduct(product);
+    setShowProductForm(true);
+  };
+
+  const handleViewProduct = (product: any) => {
+    setSelectedProduct(product);
+    setShowProductDetail(true);
+  };
+
+  const closeModals = () => {
+    setShowProductForm(false);
+    setShowProductDetail(false);
+    setSelectedProduct(null);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

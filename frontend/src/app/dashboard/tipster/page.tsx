@@ -524,12 +524,21 @@ export default function TipsterDashboard() {
             </div>
             
             <div className="p-6">
+              {formError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{formError}</p>
+                </div>
+              )}
+
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Título del Producto</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Título del Producto <span className="text-red-500">*</span>
+                  </label>
                   <input 
                     type="text" 
-                    defaultValue={selectedProduct?.title}
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     placeholder="Ej: Pronósticos Premium Mensuales"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -539,7 +548,8 @@ export default function TipsterDashboard() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
                   <textarea 
                     rows={3}
-                    defaultValue={selectedProduct?.description}
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Describe tu producto..."
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -547,11 +557,15 @@ export default function TipsterDashboard() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Precio (€)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Precio (€) <span className="text-red-500">*</span>
+                    </label>
                     <input 
                       type="number" 
                       step="0.01"
-                      defaultValue={selectedProduct ? (selectedProduct.priceCents / 100).toFixed(2) : ''}
+                      min="0"
+                      value={formData.priceCents}
+                      onChange={(e) => setFormData({ ...formData, priceCents: e.target.value })}
                       placeholder="29.99"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -560,7 +574,8 @@ export default function TipsterDashboard() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Facturación</label>
                     <select 
-                      defaultValue={selectedProduct?.billingType || 'ONE_TIME'}
+                      value={formData.billingType}
+                      onChange={(e) => setFormData({ ...formData, billingType: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="ONE_TIME">Pago único</option>
@@ -573,7 +588,8 @@ export default function TipsterDashboard() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Canal de Telegram</label>
                   <input 
                     type="text" 
-                    defaultValue={selectedProduct?.telegramChannelId}
+                    value={formData.telegramChannelId}
+                    onChange={(e) => setFormData({ ...formData, telegramChannelId: e.target.value })}
                     placeholder="@canal_premium"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -583,7 +599,8 @@ export default function TipsterDashboard() {
                   <input 
                     type="checkbox" 
                     id="active"
-                    defaultChecked={selectedProduct?.active ?? true}
+                    checked={formData.active}
+                    onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <label htmlFor="active" className="ml-2 text-sm text-gray-700">
@@ -595,18 +612,24 @@ export default function TipsterDashboard() {
               <div className="mt-6 flex gap-3 justify-end">
                 <button 
                   onClick={closeModals}
-                  className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                  disabled={saving}
+                  className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button 
-                  onClick={() => {
-                    alert('Funcionalidad de guardar en desarrollo. Se conectará con la API del backend.');
-                    closeModals();
-                  }}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                  onClick={handleSaveProduct}
+                  disabled={saving}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-2"
                 >
-                  {selectedProduct ? 'Guardar Cambios' : 'Crear Producto'}
+                  {saving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Guardando...
+                    </>
+                  ) : (
+                    selectedProduct ? 'Guardar Cambios' : 'Crear Producto'
+                  )}
                 </button>
               </div>
             </div>

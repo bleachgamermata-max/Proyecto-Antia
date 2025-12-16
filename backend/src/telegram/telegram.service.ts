@@ -156,25 +156,42 @@ O puedes conectar manualmente desde tu panel ingresando:
       // Verificar si es un username o un ID
       let chatInfo;
       
-      if (channelIdentifier.startsWith('@') || !channelIdentifier.startsWith('-')) {
-        // Es un username
-        chatInfo = await this.bot.telegram.getChat(channelIdentifier);
-      } else {
-        // Es un ID numérico
-        chatInfo = await this.bot.telegram.getChat(channelIdentifier);
+      try {
+        if (channelIdentifier.startsWith('@') || !channelIdentifier.startsWith('-')) {
+          // Es un username
+          chatInfo = await this.bot.telegram.getChat(channelIdentifier);
+        } else {
+          // Es un ID numérico
+          chatInfo = await this.bot.telegram.getChat(channelIdentifier);
+        }
+      } catch (error) {
+        return {
+          success: false,
+          message: `No se puede acceder al canal "${channelIdentifier}". Verifica que el ID o username sea correcto.`,
+        };
       }
 
       // Verificar que el bot es administrador
       const botInfo = await this.bot.telegram.getMe();
-      const botMember = await this.bot.telegram.getChatMember(
-        chatInfo.id.toString(),
-        botInfo.id,
-      );
+      let botMember;
+      
+      try {
+        botMember = await this.bot.telegram.getChatMember(
+          chatInfo.id.toString(),
+          botInfo.id,
+        );
+      } catch (error) {
+        // Si no podemos obtener info del bot, probablemente no está en el canal
+        return {
+          success: false,
+          message: `El bot @${botInfo.username} no está añadido al canal. Por favor:\n\n1. Ve a tu canal de Telegram\n2. Añade el bot como administrador\n3. Dale permiso para "Post messages"\n4. Intenta conectar nuevamente`,
+        };
+      }
 
       if (botMember.status !== 'administrator' && botMember.status !== 'creator') {
         return {
           success: false,
-          message: 'El bot no es administrador del canal. Por favor, añádelo como administrador.',
+          message: `El bot está en el canal pero no es administrador. Por favor, asegúrate de darle permisos de administrador con la opción "Post messages" activada.`,
         };
       }
 

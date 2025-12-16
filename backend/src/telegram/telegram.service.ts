@@ -58,27 +58,32 @@ export class TelegramService implements OnModuleInit {
       }
     });
 
-    // Command /start para ayudar a los usuarios
+    // Command /start - Flujo principal para clientes
     this.bot.command('start', async (ctx) => {
-      const message = `
-¡Hola! 👋
+      try {
+        const startPayload = ctx.message.text.split(' ')[1]; // Obtener parámetro después de /start
+        
+        if (!startPayload) {
+          // Sin parámetro - Mensaje genérico
+          await ctx.reply(
+            '👋 ¡Bienvenido a Antia!\n\n' +
+            'Para comprar pronósticos de un tipster, utiliza el link que te proporcionó en su canal.\n\n' +
+            '¿Eres tipster? Gestiona tu canal desde: https://antia.com/dashboard'
+          );
+          return;
+        }
 
-Soy el bot oficial de Antia para publicar pronósticos en Telegram.
-
-**Para conectar tu canal:**
-
-1️⃣ Añádeme como administrador a tu canal de Telegram
-2️⃣ Ve a tu panel de Tipster en Antia
-3️⃣ La conexión se realizará automáticamente
-
-O puedes conectar manualmente desde tu panel ingresando:
-- ID del canal
-- @username del canal
-
-¿Necesitas ayuda? Visita: https://antia.com/help
-      `;
-      
-      await ctx.reply(message);
+        // Verificar si es un link de producto
+        if (startPayload.startsWith('product_')) {
+          const productId = startPayload.replace('product_', '');
+          await this.handleProductPurchaseFlow(ctx, productId);
+        } else {
+          await ctx.reply('Link inválido. Por favor, usa el link proporcionado por tu tipster.');
+        }
+      } catch (error) {
+        this.logger.error('Error in /start command:', error);
+        await ctx.reply('Hubo un error. Por favor, intenta nuevamente.');
+      }
     });
 
     // Command /info para obtener información del chat

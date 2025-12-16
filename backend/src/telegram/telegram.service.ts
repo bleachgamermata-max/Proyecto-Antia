@@ -165,9 +165,10 @@ O puedes conectar manualmente desde tu panel ingresando:
       }
 
       // Verificar que el bot es administrador
+      const botInfo = await this.bot.telegram.getMe();
       const botMember = await this.bot.telegram.getChatMember(
         chatInfo.id.toString(),
-        this.bot.botInfo.id,
+        botInfo.id,
       );
 
       if (botMember.status !== 'administrator' && botMember.status !== 'creator') {

@@ -601,6 +601,116 @@ export default function TipsterDashboard() {
           </>
         )}
 
+        {activeView === 'telegram' && (
+          <>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">📱 Telegram</h1>
+              <p className="text-gray-600 mt-1">Conecta tu canal de Telegram para publicar pronósticos automáticamente</p>
+            </div>
+
+            {/* Estado de conexión */}
+            {telegramConnected ? (
+              <div className="bg-white rounded-lg shadow p-6 mb-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                      <span className="text-2xl">✓</span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">Canal Conectado</h3>
+                      {telegramChannel && (
+                        <div className="space-y-1 text-sm text-gray-600">
+                          <p><strong>Canal:</strong> {telegramChannel.title || 'N/A'}</p>
+                          <p><strong>Username:</strong> {telegramChannel.name || 'N/A'}</p>
+                          <p><strong>ID:</strong> {telegramChannel.id}</p>
+                          <p><strong>Conexión:</strong> {telegramChannel.connectionType === 'manual' ? 'Manual' : 'Automática'}</p>
+                          {telegramChannel.connectedAt && (
+                            <p><strong>Conectado el:</strong> {new Date(telegramChannel.connectedAt).toLocaleDateString('es-ES')}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleDisconnectTelegram}
+                    disabled={telegramLoading}
+                    className="px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 disabled:opacity-50"
+                  >
+                    {telegramLoading ? 'Desconectando...' : 'Desconectar'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow p-6 mb-6">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-2xl">📱</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Conecta tu Canal de Telegram</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Conecta tu canal de Telegram para publicar tus pronósticos directamente desde la plataforma.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Formulario de conexión */}
+                <div className="border-t pt-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    ID o @username del Canal
+                  </label>
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={telegramChannelInput}
+                      onChange={(e) => setTelegramChannelInput(e.target.value)}
+                      placeholder="Ej: @mi_canal o -1001234567890"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      disabled={telegramLoading}
+                    />
+                    <button
+                      onClick={handleConnectTelegram}
+                      disabled={telegramLoading || !telegramChannelInput.trim()}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {telegramLoading ? 'Conectando...' : 'Conectar'}
+                    </button>
+                  </div>
+                  {telegramError && (
+                    <p className="mt-2 text-sm text-red-600">{telegramError}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Instrucciones */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h3 className="font-semibold text-gray-900 mb-3">📖 Cómo conectar tu canal</h3>
+              <div className="space-y-4 text-sm text-gray-700">
+                <div>
+                  <p className="font-medium mb-1">Opción 1: Conexión Manual</p>
+                  <ol className="list-decimal ml-5 space-y-1">
+                    <li>Añade el bot como administrador a tu canal de Telegram</li>
+                    <li>Obtén el ID o @username de tu canal</li>
+                    <li>Ingresa el ID o @username arriba y haz clic en "Conectar"</li>
+                  </ol>
+                </div>
+                <div>
+                  <p className="font-medium mb-1">Opción 2: Conexión Automática</p>
+                  <ol className="list-decimal ml-5 space-y-1">
+                    <li>Añade el bot como administrador a tu canal de Telegram</li>
+                    <li>La conexión se realizará automáticamente</li>
+                  </ol>
+                </div>
+                <div className="pt-2 border-t border-blue-300">
+                  <p className="font-medium mb-1">💡 Nota:</p>
+                  <p>El bot debe tener permisos de administrador para poder publicar mensajes en tu canal.</p>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
         {activeView === 'profile' && (
           <>
             <div className="mb-8">

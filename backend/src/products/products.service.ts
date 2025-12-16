@@ -88,7 +88,8 @@ export class ProductsService {
 
     // Use $runCommandRaw to avoid transaction requirement
     // Convert DTO fields to snake_case for MongoDB
-    const updateData: any = { updated_at: new Date() };
+    // Use { $date: ISOString } format for BSON dates
+    const updateData: any = { updated_at: { $date: new Date().toISOString() } };
     if (dto.title !== undefined) updateData.title = dto.title;
     if (dto.description !== undefined) updateData.description = dto.description;
     if (dto.priceCents !== undefined) updateData.price_cents = dto.priceCents;

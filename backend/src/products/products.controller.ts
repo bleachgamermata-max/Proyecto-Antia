@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, Inject, forwardRef } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -7,6 +7,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ProductsService } from './products.service';
 import { CreateProductDto, UpdateProductDto } from './dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { TelegramService } from '../telegram/telegram.service';
 
 @ApiTags('products')
 @ApiBearerAuth()
@@ -16,6 +17,8 @@ export class ProductsController {
   constructor(
     private productsService: ProductsService,
     private prisma: PrismaService,
+    @Inject(forwardRef(() => TelegramService))
+    private telegramService: TelegramService,
   ) {}
 
   @Post()
@@ -84,5 +87,62 @@ export class ProductsController {
       where: { userId: user.id },
     });
     return this.productsService.getCheckoutLink(id, tipsterProfile.id);
+  }
+
+  @Post(':id/publish-telegram')
+  @Roles('TIPSTER')
+  @ApiOperation({ summary: 'Publish product to Telegram channel' })
+  async publishToTelegram(@Param('id') id: string, @CurrentUser() user: any) {
+    // Get tipster profile
+    const tipsterProfile = await this.prisma.tipsterProfile.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (!tipsterProfile) {
+      return {
+        success: false,
+        message: 'Perfil de tipster no encontrado',
+      };
+    }
+
+    // Check if Telegram channel is connected
+    if (!tipsterProfile.telegramChannelId) {
+      return {
+        success: false,
+        message: 'No tienes un canal de Telegram conectado. Por favor, conéctalo primero.',
+      };
+    }
+
+    // Get product details
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!product) {
+      return {
+        success: false,
+        message: 'Producto no encontrado',
+      };
+    }
+
+    // Verify product belongs to this tipster
+    if (product.tipsterId !== tipsterProfile.id) {
+      return {
+        success: false,
+        message: 'No tienes permiso para publicar este producto',
+      };
+    }
+
+    // Get checkout link
+    const checkoutLink = await this.productsService.getCheckoutLink(id, tipsterProfile.id);
+
+    // Publish to Telegram
+    return this.telegramService.publishProduct(
+      tipsterProfile.telegramChannelId,
+      {
+        ...product,
+        checkoutLink: checkoutLink.link,
+      },
+    );
   }
 }

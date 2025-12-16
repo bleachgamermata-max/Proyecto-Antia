@@ -80,10 +80,18 @@ export class ProductsService {
       throw new ForbiddenException('Not authorized');
     }
 
-    return this.prisma.product.update({
-      where: { id },
-      data: dto,
+    // Use $runCommandRaw to avoid transaction requirement
+    const updateData: any = { ...dto, updatedAt: new Date() };
+    
+    await this.prisma.$runCommandRaw({
+      update: 'products',
+      updates: [{
+        q: { _id: { $oid: id } },
+        u: { $set: updateData }
+      }]
     });
+
+    return this.findOne(id);
   }
 
   async publish(id: string, tipsterId: string) {
@@ -91,10 +99,17 @@ export class ProductsService {
     if (product.tipsterId !== tipsterId) {
       throw new ForbiddenException('Not authorized');
     }
-    return this.prisma.product.update({
-      where: { id },
-      data: { active: true },
+    
+    // Use $runCommandRaw to avoid transaction requirement
+    await this.prisma.$runCommandRaw({
+      update: 'products',
+      updates: [{
+        q: { _id: { $oid: id } },
+        u: { $set: { active: true, updatedAt: new Date() } }
+      }]
     });
+
+    return this.findOne(id);
   }
 
   async pause(id: string, tipsterId: string) {
@@ -102,10 +117,17 @@ export class ProductsService {
     if (product.tipsterId !== tipsterId) {
       throw new ForbiddenException('Not authorized');
     }
-    return this.prisma.product.update({
-      where: { id },
-      data: { active: false },
+    
+    // Use $runCommandRaw to avoid transaction requirement
+    await this.prisma.$runCommandRaw({
+      update: 'products',
+      updates: [{
+        q: { _id: { $oid: id } },
+        u: { $set: { active: false, updatedAt: new Date() } }
+      }]
     });
+
+    return this.findOne(id);
   }
 
   async getCheckoutLink(productId: string, tipsterId: string) {

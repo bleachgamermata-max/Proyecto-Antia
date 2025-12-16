@@ -72,6 +72,17 @@ export default function TipsterDashboard() {
         console.error('Error loading metrics:', error);
         setMetrics({ clicks: 0, registers: 0, ftds: 0, deposits: 0, totalDeposits: 0, conversionRate: 0 });
       }
+
+      // Load Telegram channel info
+      try {
+        const telegramRes = await telegramApi.getChannelInfo();
+        if (telegramRes.data.connected) {
+          setTelegramConnected(true);
+          setTelegramChannel(telegramRes.data.channel);
+        }
+      } catch (error) {
+        console.error('Error loading Telegram info:', error);
+      }
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {

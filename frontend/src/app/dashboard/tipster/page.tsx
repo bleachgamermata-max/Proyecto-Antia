@@ -235,7 +235,10 @@ export default function TipsterDashboard() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+                            <button 
+                              onClick={() => handleViewProduct(product)}
+                              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+                            >
                               Ver
                             </button>
                           </div>

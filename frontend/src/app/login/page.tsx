@@ -21,7 +21,12 @@ export default function LoginPage() {
 
     try {
       const response = await authApi.login(formData);
-      const user = response.data.user;
+      const { access_token, user } = response.data;
+      
+      // Guardar token en localStorage
+      if (access_token) {
+        localStorage.setItem('access_token', access_token);
+      }
       
       // Redirect based on role
       if (user.role === 'TIPSTER') {

@@ -414,6 +414,205 @@ export default function TipsterDashboard() {
           </>
         )}
       </main>
+
+      {/* Modal: Formulario de Producto */}
+      {showProductForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={closeModals}>
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {selectedProduct ? 'Editar Producto' : 'Crear Nuevo Producto'}
+                </h2>
+                <button onClick={closeModals} className="text-gray-400 hover:text-gray-600">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Título del Producto</label>
+                  <input 
+                    type="text" 
+                    defaultValue={selectedProduct?.title}
+                    placeholder="Ej: Pronósticos Premium Mensuales"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                  <textarea 
+                    rows={3}
+                    defaultValue={selectedProduct?.description}
+                    placeholder="Describe tu producto..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Precio (€)</label>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      defaultValue={selectedProduct ? (selectedProduct.priceCents / 100).toFixed(2) : ''}
+                      placeholder="29.99"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Facturación</label>
+                    <select 
+                      defaultValue={selectedProduct?.billingType || 'ONE_TIME'}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="ONE_TIME">Pago único</option>
+                      <option value="SUBSCRIPTION">Suscripción</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Canal de Telegram</label>
+                  <input 
+                    type="text" 
+                    defaultValue={selectedProduct?.telegramChannelId}
+                    placeholder="@canal_premium"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <input 
+                    type="checkbox" 
+                    id="active"
+                    defaultChecked={selectedProduct?.active ?? true}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor="active" className="ml-2 text-sm text-gray-700">
+                    Producto activo
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-6 flex gap-3 justify-end">
+                <button 
+                  onClick={closeModals}
+                  className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={() => {
+                    alert('Funcionalidad de guardar en desarrollo. Se conectará con la API del backend.');
+                    closeModals();
+                  }}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                  {selectedProduct ? 'Guardar Cambios' : 'Crear Producto'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Detalle de Producto */}
+      {showProductDetail && selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={closeModals}>
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">{selectedProduct.title}</h2>
+                <button onClick={closeModals} className="text-gray-400 hover:text-gray-600">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">Descripción</h3>
+                  <p className="text-gray-900">{selectedProduct.description}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Precio</h3>
+                    <p className="text-2xl font-bold text-green-600">€{(selectedProduct.priceCents / 100).toFixed(2)}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Estado</h3>
+                    <span className={`inline-block px-3 py-1 rounded text-sm font-medium ${selectedProduct.active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                      {selectedProduct.active ? 'Activo' : 'Pausado'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">Tipo de Facturación</h3>
+                  <p className="text-gray-900">
+                    {selectedProduct.billingType === 'SUBSCRIPTION' ? 'Suscripción' : 'Pago único'}
+                  </p>
+                </div>
+
+                {selectedProduct.telegramChannelId && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">Canal de Telegram</h3>
+                    <p className="text-gray-900">{selectedProduct.telegramChannelId}</p>
+                  </div>
+                )}
+
+                <div className="pt-4 border-t border-gray-200">
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">Estadísticas</h3>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">0</div>
+                      <div className="text-xs text-gray-600">Ventas</div>
+                    </div>
+                    <div className="bg-green-50 p-3 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">€0.00</div>
+                      <div className="text-xs text-gray-600">Ingresos</div>
+                    </div>
+                    <div className="bg-purple-50 p-3 rounded-lg">
+                      <div className="text-2xl font-bold text-purple-600">0</div>
+                      <div className="text-xs text-gray-600">Suscriptores</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex gap-3 justify-end">
+                <button 
+                  onClick={closeModals}
+                  className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Cerrar
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowProductDetail(false);
+                    handleEditProduct(selectedProduct);
+                  }}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                  Editar Producto
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

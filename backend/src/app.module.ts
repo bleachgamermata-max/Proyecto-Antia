@@ -12,6 +12,7 @@ import { HousesModule } from './houses/houses.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { BotModule } from './bot/bot.module';
+import { TelegramModule } from './telegram/telegram.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -34,6 +35,7 @@ import { HealthController } from './health.controller';
     WebhooksModule,
     TicketsModule,
     BotModule,
+    TelegramModule,
   ],
   controllers: [HealthController],
 })

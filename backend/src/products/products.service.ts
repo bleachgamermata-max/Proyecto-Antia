@@ -116,12 +116,12 @@ export class ProductsService {
       throw new ForbiddenException('Not authorized');
     }
     
-    // Use $runCommandRaw to avoid transaction requirement
+    // Use $runCommandRaw to avoid transaction requirement (snake_case for MongoDB)
     await this.prisma.$runCommandRaw({
       update: 'products',
       updates: [{
         q: { _id: { $oid: id } },
-        u: { $set: { active: true, updatedAt: new Date() } }
+        u: { $set: { active: true, updated_at: new Date() } }
       }]
     });
 
@@ -134,12 +134,12 @@ export class ProductsService {
       throw new ForbiddenException('Not authorized');
     }
     
-    // Use $runCommandRaw to avoid transaction requirement
+    // Use $runCommandRaw to avoid transaction requirement (snake_case for MongoDB)
     await this.prisma.$runCommandRaw({
       update: 'products',
       updates: [{
         q: { _id: { $oid: id } },
-        u: { $set: { active: false, updatedAt: new Date() } }
+        u: { $set: { active: false, updated_at: new Date() } }
       }]
     });
 

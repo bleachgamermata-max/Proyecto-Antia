@@ -299,21 +299,24 @@ export class TelegramService implements OnModuleInit {
     const {
       title,
       description,
-      price,
+      priceCents,
       currency,
       validityDays,
-      checkoutLink,
+      id,
     } = product;
+
+    const price = (priceCents / 100).toFixed(2);
+    const botLink = `https://t.me/${process.env.TELEGRAM_BOT_NAME || 'Antiabetbot'}?start=product_${id}`;
 
     return `
 🎯 *Nuevo Pronóstico VIP*
 
 📋 *Título:* ${this.escapeMarkdown(title)}
 📝 *Descripción:* ${this.escapeMarkdown(description || 'Sin descripción')}
-💰 *Precio:* ${price} ${currency}
+💰 *Precio:* €${price}
 📅 *Validez:* ${validityDays} días
 
-🔗 [Suscríbete aquí](${checkoutLink})
+🔗 [Comprar Ahora](${botLink})
     `.trim();
   }
 

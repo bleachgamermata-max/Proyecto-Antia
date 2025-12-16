@@ -5,8 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { productsApi, referralsApi, payoutsApi, authApi } from '@/lib/api';
 
+type ViewType = 'dashboard' | 'products' | 'referrals' | 'payouts' | 'profile';
+
 export default function TipsterDashboard() {
   const router = useRouter();
+  const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const [user, setUser] = useState<any>(null);
   const [products, setProducts] = useState([]);
   const [metrics, setMetrics] = useState<any>(null);

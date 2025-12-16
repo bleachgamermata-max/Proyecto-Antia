@@ -247,17 +247,18 @@ class AntiaAPITester:
         try:
             response = self.make_request("POST", f"/products/{self.test_product_id}/pause")
             
-            if response.status_code == 200:
+            if response.status_code in [200, 201]:  # Accept both 200 and 201
                 product = response.json()
                 self.log("✅ Product paused successfully")
                 
                 # Check if product is inactive
                 if product.get("active") == False:
                     self.log("✅ Product active status is false")
+                    return True
                 else:
                     self.log("❌ Product active status not updated correctly", "ERROR")
+                    return False
                     
-                return True
             else:
                 self.log(f"❌ Pause product failed with status {response.status_code}", "ERROR")
                 return False

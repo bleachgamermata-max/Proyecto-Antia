@@ -499,7 +499,7 @@ export default function TipsterDashboard() {
                   <div className="space-y-4">
                     {products.map((product: any) => (
                       <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between mb-3">
                           <div className="flex-1">
                             <h3 className="font-semibold text-gray-900">{product.title}</h3>
                             <p className="text-sm text-gray-500 mt-1">{product.description}</p>
@@ -544,6 +544,28 @@ export default function TipsterDashboard() {
                               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
                             >
                               Ver
+                            </button>
+                          </div>
+                        </div>
+                        {/* Link único del producto para Telegram */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-blue-600 font-medium mb-1">🔗 Link de Compra (Bot)</p>
+                              <div className="flex items-center gap-2">
+                                <code className="text-xs text-blue-800 bg-white px-2 py-1 rounded border border-blue-200 overflow-x-auto">
+                                  https://t.me/Antiabetbot?start=product_{product.id}
+                                </code>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(`https://t.me/Antiabetbot?start=product_${product.id}`);
+                                alert('✅ Link copiado al portapapeles');
+                              }}
+                              className="flex-shrink-0 px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 whitespace-nowrap"
+                            >
+                              📋 Copiar
                             </button>
                           </div>
                         </div>

@@ -14,6 +14,9 @@ export default function TipsterDashboard() {
   const [products, setProducts] = useState([]);
   const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showProductForm, setShowProductForm] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [showProductDetail, setShowProductDetail] = useState(false);
 
   useEffect(() => {
     loadData();

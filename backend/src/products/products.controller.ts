@@ -141,7 +141,7 @@ export class ProductsController {
       tipsterProfile.telegramChannelId,
       {
         ...product,
-        checkoutLink: checkoutLink.link,
+        checkoutLink: checkoutLink.url,
       },
     );
   }

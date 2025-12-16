@@ -74,24 +74,20 @@ export class AuthService {
         data: {
           email: dto.email,
           phone: dto.phone,
-          password_hash: passwordHash,
+          passwordHash: passwordHash,
           role: 'TIPSTER',
           status: 'ACTIVE', // Changed to ACTIVE for demo
-          created_at: new Date(),
-          updated_at: new Date(),
         },
       });
 
       // Create tipster profile separately
       await this.prisma.tipsterProfile.create({
         data: {
-          user_id: user.id,
-          public_name: dto.name,
-          telegram_username: dto.telegramUsername,
+          userId: user.id,
+          publicName: dto.name,
+          telegramUsername: dto.telegramUsername,
           locale: 'es',
           timezone: 'Europe/Madrid',
-          created_at: new Date(),
-          updated_at: new Date(),
         },
       });
 

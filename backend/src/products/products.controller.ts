@@ -50,7 +50,10 @@ export class ProductsController {
     @CurrentUser() user: any,
     @Body() dto: UpdateProductDto,
   ) {
-    return this.productsService.update(id, user.tipsterProfile.id, dto);
+    const tipsterProfile = await this.prisma.tipsterProfile.findUnique({
+      where: { userId: user.id },
+    });
+    return this.productsService.update(id, tipsterProfile.id, dto);
   }
 
   @Post(':id/publish')

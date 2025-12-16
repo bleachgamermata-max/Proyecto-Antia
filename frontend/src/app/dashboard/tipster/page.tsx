@@ -60,9 +60,12 @@ export default function TipsterDashboard() {
   const handleLogout = async () => {
     try {
       await authApi.logout();
+      localStorage.removeItem('access_token');
       router.push('/');
     } catch (error) {
       console.error('Error logging out:', error);
+      localStorage.removeItem('access_token');
+      router.push('/');
     }
   };
 

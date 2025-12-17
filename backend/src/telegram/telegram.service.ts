@@ -718,6 +718,113 @@ export class TelegramService implements OnModuleInit {
   }
 
   /**
+   * Notificar al tipster sobre una nueva venta
+   */
+  async notifyTipsterNewSale(
+    tipsterId: string,
+    orderId: string,
+    productId: string,
+    amountCents: number,
+    currency: string,
+    buyerEmail?: string,
+    buyerUsername?: string,
+  ) {
+    try {
+      this.logger.log(`Notifying tipster ${tipsterId} about sale ${orderId}`);
+
+      // Get tipster info
+      const tipster: any = await this.prisma.tipsterProfile.findUnique({
+        where: { id: tipsterId },
+      });
+
+      if (!tipster) {
+        this.logger.error('Tipster not found for sale notification');
+        return { success: false, error: 'Tipster not found' };
+      }
+
+      // Get product info
+      const product: any = await this.prisma.product.findUnique({
+        where: { id: productId },
+      });
+
+      // Format price
+      const priceFormatted = new Intl.NumberFormat('es-ES', {
+        style: 'currency',
+        currency: currency,
+      }).format(amountCents / 100);
+
+      // Get tipster's Telegram ID to send notification
+      // First check if tipster has a telegram_user_id
+      if (tipster.telegramUserId) {
+        const saleMessage = 
+          `💰 *¡Nueva Venta!*\n\n` +
+          `Has recibido una nueva compra:\n\n` +
+          `📦 *Producto:* ${product?.title || 'Producto'}\n` +
+          `💵 *Importe:* ${priceFormatted}\n` +
+          `👤 *Comprador:* ${buyerUsername || buyerEmail || 'Anónimo'}\n` +
+          `📅 *Fecha:* ${new Date().toLocaleString('es-ES')}\n\n` +
+          `El cliente ya tiene acceso al contenido.`;
+
+        try {
+          await this.bot.telegram.sendMessage(tipster.telegramUserId, saleMessage, {
+            parse_mode: 'Markdown',
+          });
+          this.logger.log(`Sale notification sent to tipster ${tipsterId}`);
+        } catch (sendError) {
+          this.logger.error('Error sending sale notification to tipster:', sendError);
+        }
+      }
+
+      // Update tipster's earnings in database
+      await this.updateTipsterEarnings(tipsterId, amountCents, currency);
+
+      return { success: true };
+
+    } catch (error) {
+      this.logger.error('Error notifying tipster of sale:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Update tipster earnings
+   */
+  private async updateTipsterEarnings(tipsterId: string, amountCents: number, currency: string) {
+    try {
+      // Get current earnings
+      const result = await this.prisma.$runCommandRaw({
+        find: 'tipster_profiles',
+        filter: { _id: { $oid: tipsterId } },
+        projection: { total_earnings_cents: 1, total_sales: 1 },
+        limit: 1,
+      }) as any;
+
+      const currentEarnings = result.cursor?.firstBatch?.[0]?.total_earnings_cents || 0;
+      const currentSales = result.cursor?.firstBatch?.[0]?.total_sales || 0;
+
+      // Update earnings
+      await this.prisma.$runCommandRaw({
+        update: 'tipster_profiles',
+        updates: [{
+          q: { _id: { $oid: tipsterId } },
+          u: {
+            $set: {
+              total_earnings_cents: currentEarnings + amountCents,
+              total_sales: currentSales + 1,
+              last_sale_at: { $date: new Date().toISOString() },
+              updated_at: { $date: new Date().toISOString() },
+            },
+          },
+        }],
+      });
+
+      this.logger.log(`Updated earnings for tipster ${tipsterId}: +${amountCents} cents`);
+    } catch (error) {
+      this.logger.error('Error updating tipster earnings:', error);
+    }
+  }
+
+  /**
    * Verificar si un canal está conectado
    */
   async isChannelConnected(tipsterId: string): Promise<boolean> {

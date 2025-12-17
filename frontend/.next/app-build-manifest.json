@@ -15,6 +15,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/register/page.js"
+    ],
+    "/checkout/[productId]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/checkout/[productId]/page.js"
     ]
   }
 }

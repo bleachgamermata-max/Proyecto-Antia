@@ -14,7 +14,7 @@
 ## Backend API Test Results (COMPLETED - 2025-12-16)
 
 ### Product CRUD API Tests - ALL PASSED ✅
-**Test Environment:** https://betexpert-platform.preview.emergentagent.com/api
+**Test Environment:** https://betguru-7.preview.emergentagent.com/api
 **Test Credentials:** fausto.perez@antia.com / Tipster123!
 
 #### Test Results Summary:

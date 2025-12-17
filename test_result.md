@@ -119,6 +119,32 @@
 - None currently - product CRUD is working perfectly
 - Backend API fully functional and tested
 
+## Stripe Checkout Integration (2025-12-17)
+
+### Implementation Complete ✅
+- Created `/app/backend/src/checkout/` module with:
+  - `checkout.module.ts` - NestJS module
+  - `checkout.service.ts` - Stripe integration and order management
+  - `checkout.controller.ts` - API endpoints
+- Created frontend pages:
+  - `/app/frontend/src/app/checkout/[productId]/page.tsx` - Main checkout form
+  - `/app/frontend/src/app/checkout/success/page.tsx` - Success page with polling
+  - `/app/frontend/src/app/checkout/cancel/page.tsx` - Cancel page
+
+### API Endpoints:
+- `GET /api/checkout/product/:productId` - Get product info for checkout ✅
+- `POST /api/checkout/session` - Create Stripe checkout session
+- `GET /api/checkout/status/:sessionId` - Get checkout status
+- `GET /api/checkout/verify` - Verify payment and get order details
+- `POST /api/checkout/webhook/stripe` - Stripe webhook
+
+### Features:
+- Guest checkout (email only)
+- Register mode (with password for future purchases)
+- Age verification checkbox
+- Terms and conditions acceptance
+- Marketing communications opt-in
+
 ## Telegram Bot Testing Results (2025-12-17)
 
 ### Bug Fix: Webhook URL Misconfiguration - RESOLVED ✅

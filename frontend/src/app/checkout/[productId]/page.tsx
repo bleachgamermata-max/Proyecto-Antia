@@ -211,6 +211,21 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-md mx-auto">
+        {/* Gateway Info Banner */}
+        {gatewayInfo && (
+          <div className={`mb-4 p-3 rounded-xl text-center text-sm ${
+            gatewayInfo.geo.isSpain 
+              ? 'bg-yellow-50 border border-yellow-200 text-yellow-800' 
+              : 'bg-blue-50 border border-blue-200 text-blue-800'
+          }`}>
+            {gatewayInfo.geo.isSpain ? (
+              <>🇪🇸 Pago desde España - Disponible: Tarjeta {gatewayInfo.availableMethods.includes('bizum') && '+ Bizum'}</>
+            ) : (
+              <>🌍 Pago desde {gatewayInfo.geo.countryName} - Tarjeta de crédito/débito</>
+            )}
+          </div>
+        )}
+
         {/* Header */}
         <div className="bg-white rounded-t-2xl p-6 border-b">
           <h1 className="text-xl font-semibold text-center text-gray-900">Antia</h1>

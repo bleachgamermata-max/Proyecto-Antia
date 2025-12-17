@@ -618,6 +618,8 @@ export class TelegramService implements OnModuleInit {
    */
   async notifyPaymentSuccess(telegramUserId: string, orderId: string, productId: string) {
     try {
+      this.logger.log(`Processing payment success notification for user ${telegramUserId}, order ${orderId}`);
+
       // Obtener producto e información del tipster
       const product: any = await this.prisma.product.findUnique({
         where: { id: productId },
@@ -625,50 +627,93 @@ export class TelegramService implements OnModuleInit {
 
       if (!product) {
         this.logger.error('Product not found for notification');
-        return;
+        return { success: false, error: 'Product not found' };
       }
 
       const tipster: any = await this.prisma.tipsterProfile.findUnique({
         where: { id: product.tipsterId },
       });
 
-      if (!tipster || !tipster.telegramChannelId) {
-        this.logger.error('Tipster or channel not found for notification');
-        return;
+      if (!tipster) {
+        this.logger.error('Tipster not found for notification');
+        return { success: false, error: 'Tipster not found' };
       }
 
-      // Generar link de invitación al canal premium
-      const inviteLink = await this.bot.telegram.createChatInviteLink(
-        tipster.telegramChannelId,
-        {
-          member_limit: 1, // Link de un solo uso
-          expire_date: Math.floor(Date.now() / 1000) + 86400, // Expira en 24 horas
-        }
-      );
+      // Mensaje 1: Agradecimiento y soporte
+      const thankYouMessage = 
+        `✅ *Gracias por su compra*\n\n` +
+        `A continuación recibirá acceso a su servicio.\n\n` +
+        `Si tiene alguna consulta, puede contactar con soporte en @AntiaSupport`;
 
-      // Mensaje de éxito
-      const successMessage = 
-        `✅ *¡Pago Confirmado!*\n\n` +
-        `Gracias por tu compra. Tu pago ha sido procesado exitosamente.\n\n` +
-        `🎯 *Producto:* ${product.title}\n` +
-        `👤 *Tipster:* ${tipster.publicName}\n\n` +
-        `📱 *Acceso al Canal Premium*\n` +
-        `Haz clic en el botón de abajo para unirte al canal exclusivo del tipster y recibir los pronósticos.`;
-
-      await this.bot.telegram.sendMessage(telegramUserId, successMessage, {
+      await this.bot.telegram.sendMessage(telegramUserId, thankYouMessage, {
         parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: '🚀 Unirme al Canal Premium', url: inviteLink.invite_link },
-            ],
-          ],
-        },
       });
 
-      this.logger.log(`Payment success notification sent to ${telegramUserId}`);
+      // Si el tipster tiene canal de Telegram, generar link de invitación
+      if (tipster.telegramChannelId) {
+        try {
+          // Generar link de invitación al canal premium
+          const inviteLink = await this.bot.telegram.createChatInviteLink(
+            tipster.telegramChannelId,
+            {
+              member_limit: 1, // Link de un solo uso
+              expire_date: Math.floor(Date.now() / 1000) + 86400 * 7, // Expira en 7 días
+            }
+          );
+
+          // Mensaje 2: Acceso al canal
+          const accessMessage = 
+            `🎯 *Compra autorizada*\n\n` +
+            `Puede entrar al canal del servicio *${product.title}* pinchando aquí:\n\n` +
+            `${inviteLink.invite_link}`;
+
+          await this.bot.telegram.sendMessage(telegramUserId, accessMessage, {
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: '🚀 Entrar al Canal', url: inviteLink.invite_link },
+                ],
+              ],
+            },
+          });
+
+          this.logger.log(`Payment success notification with channel link sent to ${telegramUserId}`);
+          return { success: true, inviteLink: inviteLink.invite_link };
+
+        } catch (inviteError) {
+          this.logger.error('Error creating invite link:', inviteError);
+          
+          // Si no podemos crear el link, enviar mensaje con instrucciones alternativas
+          const fallbackMessage = 
+            `🎯 *Compra autorizada*\n\n` +
+            `Su compra ha sido procesada correctamente.\n\n` +
+            `Para acceder al canal premium, por favor contacte con el tipster *${tipster.publicName}* o con soporte en @AntiaSupport`;
+
+          await this.bot.telegram.sendMessage(telegramUserId, fallbackMessage, {
+            parse_mode: 'Markdown',
+          });
+
+          return { success: true, inviteLink: null };
+        }
+      } else {
+        // El tipster no tiene canal de Telegram configurado
+        const noChannelMessage = 
+          `🎯 *Compra autorizada*\n\n` +
+          `Su compra ha sido procesada correctamente.\n\n` +
+          `El tipster *${tipster.publicName}* le contactará pronto con los detalles de acceso.`;
+
+        await this.bot.telegram.sendMessage(telegramUserId, noChannelMessage, {
+          parse_mode: 'Markdown',
+        });
+
+        this.logger.log(`Payment success notification (no channel) sent to ${telegramUserId}`);
+        return { success: true, inviteLink: null };
+      }
+
     } catch (error) {
       this.logger.error('Error notifying payment success:', error);
+      return { success: false, error: error.message };
     }
   }
 

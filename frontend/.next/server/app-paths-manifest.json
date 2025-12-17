@@ -2,5 +2,6 @@
   "/page": "app/page.js",
   "/login/page": "app/login/page.js",
   "/dashboard/tipster/page": "app/dashboard/tipster/page.js",
-  "/checkout/[productId]/page": "app/checkout/[productId]/page.js"
+  "/checkout/[productId]/page": "app/checkout/[productId]/page.js",
+  "/checkout/success/page": "app/checkout/success/page.js"
 }

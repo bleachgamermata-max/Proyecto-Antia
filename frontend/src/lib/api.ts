@@ -66,7 +66,7 @@ export const productsApi = {
 };
 
 // Orders
-export const ordersApi = {
+export const ordersApiClient = {
   getMy: () => api.get('/orders/my'),
 };
 

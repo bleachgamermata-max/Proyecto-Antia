@@ -93,3 +93,20 @@ export const telegramApi = {
   disconnect: () => api.delete('/telegram/disconnect'),
   publishProduct: (productId: string) => api.post(`/products/${productId}/publish-telegram`),
 };
+
+// Checkout
+export const checkoutApi = {
+  getProduct: (productId: string) => api.get(`/checkout/product/${productId}`),
+  createSession: (data: {
+    productId: string;
+    originUrl: string;
+    isGuest: boolean;
+    email?: string;
+    phone?: string;
+    telegramUserId?: string;
+    telegramUsername?: string;
+  }) => api.post('/checkout/session', data),
+  getStatus: (sessionId: string) => api.get(`/checkout/status/${sessionId}`),
+  verify: (sessionId: string, orderId: string) => 
+    api.get('/checkout/verify', { params: { session_id: sessionId, order_id: orderId } }),
+};

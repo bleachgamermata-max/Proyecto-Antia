@@ -2,6 +2,8 @@ import { Injectable, Logger, NotFoundException, BadRequestException } from '@nes
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
+import { GeolocationService, GeoLocationResult } from './geolocation.service';
+import { RedsysService } from './redsys.service';
 import Stripe from 'stripe';
 
 export interface CreateCheckoutDto {
@@ -12,29 +14,79 @@ export interface CreateCheckoutDto {
   phone?: string;
   telegramUserId?: string;
   telegramUsername?: string;
+  clientIp?: string; // IP for geolocation
 }
 
 export interface CheckoutSessionResponse {
   url: string;
   sessionId: string;
   orderId: string;
+  gateway: 'stripe' | 'redsys';
+  country: string;
+}
+
+// Feature flags for payment methods
+export interface PaymentFeatureFlags {
+  cryptoEnabled: boolean;
+  redsysEnabled: boolean;
+  stripeEnabled: boolean;
 }
 
 @Injectable()
 export class CheckoutService {
   private stripe: Stripe;
   private readonly logger = new Logger(CheckoutService.name);
+  
+  // Feature flags (can be loaded from DB or config in production)
+  private featureFlags: PaymentFeatureFlags = {
+    cryptoEnabled: false, // Future feature
+    redsysEnabled: true,
+    stripeEnabled: true,
+  };
 
   constructor(
     private prisma: PrismaService,
     private config: ConfigService,
     private telegramService: TelegramService,
+    private geolocationService: GeolocationService,
+    private redsysService: RedsysService,
   ) {
     const stripeKey = this.config.get<string>('STRIPE_API_KEY');
     if (!stripeKey) {
       this.logger.warn('STRIPE_API_KEY not configured');
     }
     this.stripe = new Stripe(stripeKey || '');
+  }
+
+  /**
+   * Detect country from IP and determine which gateway to use
+   */
+  async detectGateway(clientIp: string): Promise<{
+    gateway: 'stripe' | 'redsys';
+    geo: GeoLocationResult;
+    availableMethods: string[];
+  }> {
+    const geo = await this.geolocationService.detectCountry(clientIp);
+    
+    let gateway: 'stripe' | 'redsys' = 'stripe';
+    let availableMethods: string[] = ['card'];
+
+    // If in Spain and Redsys is enabled, use Redsys
+    if (geo.isSpain && this.featureFlags.redsysEnabled && this.redsysService.isAvailable()) {
+      gateway = 'redsys';
+      availableMethods = ['card', 'bizum'];
+    }
+
+    this.logger.log(`Gateway selection for ${clientIp}: ${gateway} (country: ${geo.country})`);
+
+    return { gateway, geo, availableMethods };
+  }
+
+  /**
+   * Get feature flags for crypto payments (future)
+   */
+  getFeatureFlags(): PaymentFeatureFlags {
+    return this.featureFlags;
   }
 
   async createCheckoutSession(dto: CreateCheckoutDto): Promise<CheckoutSessionResponse> {

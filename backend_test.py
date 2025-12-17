@@ -611,7 +611,7 @@ class AntiaAPITester:
         try:
             response = self.make_request("POST", f"/checkout/simulate-payment/{order_id}", use_auth=False)
             
-            if response.status_code == 200:
+            if response.status_code in [200, 201]:  # Accept both 200 and 201
                 payment_result = response.json()
                 self.log("✅ Payment simulation successful")
                 

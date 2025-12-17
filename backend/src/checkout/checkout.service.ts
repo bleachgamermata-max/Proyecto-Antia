@@ -540,4 +540,92 @@ export class CheckoutService {
       tipster,
     };
   }
+
+  /**
+   * Create order and simulate payment in one step (for testing)
+   */
+  async createAndSimulatePayment(data: {
+    productId: string;
+    email?: string;
+    phone?: string;
+    telegramUserId?: string;
+    telegramUsername?: string;
+  }) {
+    // 1. Get product
+    const product = await this.prisma.product.findUnique({
+      where: { id: data.productId },
+    });
+
+    if (!product || !product.active) {
+      throw new NotFoundException('Producto no encontrado o no está disponible');
+    }
+
+    // 2. Create order
+    const orderId = await this.createPendingOrder({
+      productId: data.productId,
+      tipsterId: product.tipsterId,
+      amountCents: product.priceCents,
+      currency: product.currency,
+      email: data.email,
+      phone: data.phone,
+      telegramUserId: data.telegramUserId,
+      telegramUsername: data.telegramUsername,
+      isGuest: true,
+    });
+
+    this.logger.log(`Created test order ${orderId}`);
+
+    // 3. Simulate payment
+    await this.prisma.$runCommandRaw({
+      update: 'orders',
+      updates: [{
+        q: { _id: { $oid: orderId } },
+        u: {
+          $set: {
+            status: 'PAGADA',
+            payment_provider: 'test_simulated',
+            payment_method: 'test',
+            paid_at: { $date: new Date().toISOString() },
+            updated_at: { $date: new Date().toISOString() },
+          },
+        },
+      }],
+    });
+
+    this.logger.log(`Simulated payment for order ${orderId}`);
+
+    // 4. Send Telegram notification if user came from Telegram
+    let telegramResult = null;
+    if (data.telegramUserId) {
+      telegramResult = await this.telegramService.notifyPaymentSuccess(
+        data.telegramUserId,
+        orderId,
+        data.productId,
+      );
+    }
+
+    // 5. Get order details
+    const order = await this.getOrderById(orderId);
+    const tipster = await this.prisma.tipsterProfile.findUnique({
+      where: { id: product.tipsterId },
+    });
+
+    return {
+      success: true,
+      message: 'Pago simulado exitosamente',
+      orderId,
+      order,
+      product: {
+        id: product.id,
+        title: product.title,
+        priceCents: product.priceCents,
+        currency: product.currency,
+      },
+      tipster: tipster ? {
+        id: tipster.id,
+        publicName: tipster.publicName,
+      } : null,
+      telegramNotification: telegramResult,
+    };
+  }
 }

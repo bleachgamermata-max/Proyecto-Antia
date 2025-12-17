@@ -649,55 +649,46 @@ export class TelegramService implements OnModuleInit {
         parse_mode: 'Markdown',
       });
 
-      // Si el tipster tiene canal de Telegram, generar link de invitación
-      if (tipster.telegramChannelId) {
-        try {
-          // Generar link de invitación al canal premium
-          const inviteLink = await this.bot.telegram.createChatInviteLink(
-            tipster.telegramChannelId,
-            {
-              member_limit: 1, // Link de un solo uso
-              expire_date: Math.floor(Date.now() / 1000) + 86400 * 7, // Expira en 7 días
-            }
-          );
+      // Obtener el enlace del canal premium configurado por el tipster
+      const tipsterProfileResult = await this.prisma.$runCommandRaw({
+        find: 'tipster_profiles',
+        filter: { _id: { $oid: tipster.id } },
+        projection: { premium_channel_link: 1 },
+        limit: 1,
+      }) as any;
+      
+      const premiumChannelLink = tipsterProfileResult.cursor?.firstBatch?.[0]?.premium_channel_link;
 
-          // Mensaje 2: Acceso al canal
-          const accessMessage = 
-            `🎯 *Compra autorizada*\n\n` +
-            `Puede entrar al canal del servicio *${product.title}* pinchando aquí:\n\n` +
-            `${inviteLink.invite_link}`;
+      // Si el tipster tiene un enlace de canal premium configurado, enviarlo
+      if (premiumChannelLink) {
+        // Mensaje 2: Acceso al canal premium
+        const accessMessage = 
+          `🎯 *Compra autorizada*\n\n` +
+          `Puede entrar al canal del servicio *${product.title}* pinchando aquí:\n\n` +
+          `${premiumChannelLink}`;
 
-          await this.bot.telegram.sendMessage(telegramUserId, accessMessage, {
-            parse_mode: 'Markdown',
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  { text: '🚀 Entrar al Canal', url: inviteLink.invite_link },
-                ],
+        await this.bot.telegram.sendMessage(telegramUserId, accessMessage, {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '🚀 Entrar al Canal', url: premiumChannelLink },
               ],
-            },
-          });
+            ],
+          },
+        });
 
-          this.logger.log(`Payment success notification with channel link sent to ${telegramUserId}`);
-          return { success: true, inviteLink: inviteLink.invite_link };
+        // Mensaje 3: Confirmación final
+        await this.bot.telegram.sendMessage(telegramUserId, 
+          `✅ *Compra finalizada*\n\nYa tienes acceso al contenido premium.`,
+          { parse_mode: 'Markdown' }
+        );
 
-        } catch (inviteError) {
-          this.logger.error('Error creating invite link:', inviteError);
-          
-          // Si no podemos crear el link, enviar mensaje con instrucciones alternativas
-          const fallbackMessage = 
-            `🎯 *Compra autorizada*\n\n` +
-            `Su compra ha sido procesada correctamente.\n\n` +
-            `Para acceder al canal premium, por favor contacte con el tipster *${tipster.publicName}* o con soporte en @AntiaSupport`;
+        this.logger.log(`Payment success notification with premium channel link sent to ${telegramUserId}`);
+        return { success: true, inviteLink: premiumChannelLink };
 
-          await this.bot.telegram.sendMessage(telegramUserId, fallbackMessage, {
-            parse_mode: 'Markdown',
-          });
-
-          return { success: true, inviteLink: null };
-        }
       } else {
-        // El tipster no tiene canal de Telegram configurado
+        // El tipster no tiene canal premium configurado - solo confirmar la compra
         const noChannelMessage = 
           `🎯 *Compra autorizada*\n\n` +
           `Su compra ha sido procesada correctamente.\n\n` +
@@ -707,7 +698,7 @@ export class TelegramService implements OnModuleInit {
           parse_mode: 'Markdown',
         });
 
-        this.logger.log(`Payment success notification (no channel) sent to ${telegramUserId}`);
+        this.logger.log(`Payment success notification (no premium channel configured) sent to ${telegramUserId}`);
         return { success: true, inviteLink: null };
       }
 

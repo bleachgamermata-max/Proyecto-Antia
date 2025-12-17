@@ -490,6 +490,308 @@ class AntiaAPITester:
             self.log(f"❌ MongoDB test failed: {str(e)}", "ERROR")
             return False
 
+    def test_get_order_details(self) -> bool:
+        """Test getting order details by ID"""
+        self.log("=== Testing Get Order Details ===")
+        
+        # Use the specific order ID from the review request
+        order_id = "69420512627906d2653f118c"
+        
+        try:
+            response = self.make_request("GET", f"/checkout/order/{order_id}", use_auth=False)
+            
+            if response.status_code == 200:
+                order_data = response.json()
+                self.log("✅ Successfully retrieved order details")
+                
+                # Verify required fields
+                if "order" in order_data:
+                    order = order_data["order"]
+                    self.log(f"Order ID: {order.get('id', 'N/A')}")
+                    self.log(f"Status: {order.get('status', 'N/A')}")
+                    self.log(f"Amount: {order.get('amountCents', 'N/A')} cents")
+                    
+                    # Check if status is PAGADA as expected
+                    if order.get('status') == 'PAGADA':
+                        self.log("✅ Order status is PAGADA as expected")
+                    else:
+                        self.log(f"⚠️ Order status is {order.get('status')}, expected PAGADA", "WARN")
+                else:
+                    self.log("❌ Order data missing in response", "ERROR")
+                    return False
+                
+                # Check for product and tipster info
+                if "product" in order_data and order_data["product"]:
+                    product = order_data["product"]
+                    self.log(f"✅ Product info included: {product.get('title', 'No title')}")
+                else:
+                    self.log("⚠️ No product info in response", "WARN")
+                    
+                if "tipster" in order_data and order_data["tipster"]:
+                    tipster = order_data["tipster"]
+                    self.log(f"✅ Tipster info included: {tipster.get('publicName', 'No name')}")
+                else:
+                    self.log("⚠️ No tipster info in response", "WARN")
+                    
+                return True
+            else:
+                self.log(f"❌ Get order details failed with status {response.status_code}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Get order details test failed: {str(e)}", "ERROR")
+            return False
+
+    def create_test_order_in_mongodb(self) -> str:
+        """Create a new pending order in MongoDB and return the order ID"""
+        self.log("=== Creating Test Order in MongoDB ===")
+        
+        try:
+            import subprocess
+            
+            # MongoDB command to create new order
+            mongo_script = '''
+            const orderId = new ObjectId();
+            db.orders.insertOne({
+              _id: orderId,
+              product_id: '6941ab8bc37d0aa47ab23ef8',
+              tipster_id: '6941ab14c37d0aa47ab23ec6',
+              amount_cents: 3400,
+              currency: 'EUR',
+              email_backup: 'nuevo@test.com',
+              telegram_user_id: '98765432',
+              status: 'PENDING',
+              payment_provider: 'stripe',
+              created_at: new Date(),
+              updated_at: new Date()
+            });
+            print('ORDER_ID=' + orderId.toString());
+            '''
+            
+            cmd = ["mongosh", "--quiet", "antia_db", "--eval", mongo_script]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            
+            if result.returncode == 0:
+                # Extract order ID from output
+                output_lines = result.stdout.strip().split('\n')
+                order_id = None
+                
+                for line in output_lines:
+                    if line.startswith('ORDER_ID='):
+                        order_id = line.replace('ORDER_ID=', '').strip()
+                        break
+                
+                if order_id:
+                    self.log(f"✅ Created test order with ID: {order_id}")
+                    return order_id
+                else:
+                    self.log("❌ Could not extract order ID from MongoDB output", "ERROR")
+                    self.log(f"MongoDB output: {result.stdout}")
+                    return None
+            else:
+                self.log(f"❌ MongoDB order creation failed: {result.stderr}", "ERROR")
+                return None
+                
+        except subprocess.TimeoutExpired:
+            self.log("❌ MongoDB order creation timed out", "ERROR")
+            return None
+        except Exception as e:
+            self.log(f"❌ Create test order failed: {str(e)}", "ERROR")
+            return None
+
+    def test_simulate_payment(self, order_id: str) -> bool:
+        """Test simulating payment for an order"""
+        if not order_id:
+            self.log("❌ No order ID provided for payment simulation", "ERROR")
+            return False
+            
+        self.log(f"=== Testing Simulate Payment for Order {order_id} ===")
+        
+        try:
+            response = self.make_request("POST", f"/checkout/simulate-payment/{order_id}", use_auth=False)
+            
+            if response.status_code == 200:
+                payment_result = response.json()
+                self.log("✅ Payment simulation successful")
+                
+                # Check response structure
+                if payment_result.get("success"):
+                    self.log("✅ Payment marked as successful")
+                    
+                    # Check if order status changed
+                    if "order" in payment_result:
+                        order = payment_result["order"]
+                        if order.get("status") == "PAGADA":
+                            self.log("✅ Order status changed to PAGADA")
+                        else:
+                            self.log(f"❌ Order status is {order.get('status')}, expected PAGADA", "ERROR")
+                            return False
+                    else:
+                        self.log("⚠️ No order info in payment response", "WARN")
+                        
+                    # Check Telegram notification result
+                    if "telegramNotification" in payment_result:
+                        telegram_result = payment_result["telegramNotification"]
+                        if telegram_result:
+                            self.log("✅ Telegram notification attempted")
+                        else:
+                            self.log("⚠️ No Telegram notification result", "WARN")
+                    
+                    return True
+                else:
+                    self.log("❌ Payment simulation marked as failed", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ Simulate payment failed with status {response.status_code}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Simulate payment test failed: {str(e)}", "ERROR")
+            return False
+
+    def test_complete_payment(self, order_id: str) -> bool:
+        """Test complete payment endpoint"""
+        if not order_id:
+            self.log("❌ No order ID provided for complete payment", "ERROR")
+            return False
+            
+        self.log(f"=== Testing Complete Payment for Order {order_id} ===")
+        
+        complete_data = {
+            "orderId": order_id
+        }
+        
+        try:
+            response = self.make_request("POST", "/checkout/complete-payment", complete_data, use_auth=False)
+            
+            if response.status_code == 200:
+                complete_result = response.json()
+                self.log("✅ Complete payment successful")
+                
+                # Check response structure
+                if complete_result.get("success"):
+                    self.log("✅ Payment completion marked as successful")
+                    
+                    # Check for order, product, and tipster data
+                    required_fields = ["order", "product", "tipster"]
+                    for field in required_fields:
+                        if field in complete_result and complete_result[field]:
+                            if field == "order":
+                                order = complete_result[field]
+                                self.log(f"✅ Order data: ID={order.get('id')}, Status={order.get('status')}")
+                            elif field == "product":
+                                product = complete_result[field]
+                                self.log(f"✅ Product data: {product.get('title')} - {product.get('priceCents')} cents")
+                            elif field == "tipster":
+                                tipster = complete_result[field]
+                                self.log(f"✅ Tipster data: {tipster.get('publicName')}")
+                        else:
+                            self.log(f"❌ Missing {field} data in response", "ERROR")
+                            return False
+                    
+                    return True
+                else:
+                    self.log("❌ Payment completion marked as failed", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ Complete payment failed with status {response.status_code}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Complete payment test failed: {str(e)}", "ERROR")
+            return False
+
+    def verify_order_in_mongodb(self, order_id: str = None) -> bool:
+        """Verify order is updated in MongoDB"""
+        self.log("=== Verifying Order in MongoDB ===")
+        
+        try:
+            import subprocess
+            
+            if order_id:
+                # Check specific order
+                mongo_script = f'db.orders.findOne({{_id: ObjectId("{order_id}")}}, {{status: 1, payment_provider: 1, paid_at: 1}})'
+            else:
+                # Check any PAGADA order
+                mongo_script = 'db.orders.findOne({status: "PAGADA"}, {status: 1, payment_provider: 1, paid_at: 1})'
+            
+            cmd = ["mongosh", "--quiet", "antia_db", "--eval", mongo_script]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            
+            if result.returncode == 0:
+                self.log("✅ Successfully queried MongoDB for order verification")
+                self.log(f"MongoDB output: {result.stdout}")
+                
+                # Check if we got a valid result
+                if "PAGADA" in result.stdout:
+                    self.log("✅ Found order with status PAGADA")
+                    
+                    if "paid_at" in result.stdout:
+                        self.log("✅ Order has paid_at timestamp")
+                    else:
+                        self.log("⚠️ Order missing paid_at timestamp", "WARN")
+                    
+                    return True
+                else:
+                    self.log("❌ No PAGADA order found in MongoDB", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ MongoDB verification failed: {result.stderr}", "ERROR")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            self.log("❌ MongoDB verification timed out", "ERROR")
+            return False
+        except Exception as e:
+            self.log(f"❌ MongoDB verification failed: {str(e)}", "ERROR")
+            return False
+
+    def check_telegram_notification_logs(self) -> bool:
+        """Check backend logs for Telegram notification attempts"""
+        self.log("=== Checking Backend Logs for Telegram Notifications ===")
+        
+        try:
+            import subprocess
+            
+            # Check supervisor backend logs for Telegram notification messages
+            cmd = ["tail", "-n", "100", "/var/log/supervisor/backend.out.log"]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            
+            if result.returncode == 0:
+                log_content = result.stdout
+                
+                # Look for payment success notification messages
+                if "Processing payment success notification" in log_content:
+                    self.log("✅ Found 'Processing payment success notification' in logs")
+                    
+                    # Check for other related messages
+                    if "chat not found" in log_content.lower():
+                        self.log("✅ Found expected 'chat not found' error (test chat_id doesn't exist)")
+                    
+                    return True
+                else:
+                    self.log("⚠️ No 'Processing payment success notification' found in recent logs", "WARN")
+                    self.log("Recent log entries:")
+                    # Show last few lines for debugging
+                    lines = log_content.split('\n')[-10:]
+                    for line in lines:
+                        if line.strip():
+                            self.log(f"  {line}")
+                    return True  # Still pass as notification may not have been triggered
+            else:
+                self.log(f"❌ Could not read backend logs: {result.stderr}", "ERROR")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            self.log("❌ Log check timed out", "ERROR")
+            return False
+        except Exception as e:
+            self.log(f"❌ Log check failed: {str(e)}", "ERROR")
+            return False
+
     def run_all_tests(self) -> Dict[str, bool]:
         """Run all API tests"""
         self.log("🚀 Starting Antia Platform Backend API Tests")

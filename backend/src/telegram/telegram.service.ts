@@ -68,26 +68,23 @@ export class TelegramService implements OnModuleInit {
         const startPayload = ctx.message.text.split(' ')[1]; // Obtener parámetro después de /start
         this.logger.log(`📦 Start payload: ${startPayload || 'NONE'}`);
         
-        if (!startPayload) {
-          // Sin parámetro - Mensaje genérico
-          this.logger.log('ℹ️  No payload, sending generic message');
-          await ctx.reply(
-            '👋 ¡Bienvenido a Antia!\n\n' +
-            'Para comprar pronósticos de un tipster, utiliza el link que te proporcionó en su canal.\n\n' +
-            '¿Eres tipster? Gestiona tu canal desde: https://antia.com/dashboard'
-          );
+        // Si hay un payload con product_, procesarlo directamente (deep link)
+        if (startPayload && startPayload.startsWith('product_')) {
+          const productId = startPayload.replace('product_', '');
+          this.logger.log(`🎯 Starting product flow from deep link for: ${productId}`);
+          await this.handleProductPurchaseFlow(ctx, productId);
           return;
         }
 
-        // Verificar si es un link de producto
-        if (startPayload.startsWith('product_')) {
-          const productId = startPayload.replace('product_', '');
-          this.logger.log(`🎯 Starting product flow for: ${productId}`);
-          await this.handleProductPurchaseFlow(ctx, productId);
-        } else {
-          this.logger.log(`❌ Invalid payload: ${startPayload}`);
-          await ctx.reply('Link inválido. Por favor, usa el link proporcionado por tu tipster.');
-        }
+        // Sin payload o con otro payload - pedir que pegue el enlace
+        this.logger.log('ℹ️  No product payload, asking user to paste link');
+        await ctx.reply(
+          '👋 ¡Bienvenido a Antia!\n\n' +
+          '📎 Por favor, pega el enlace del producto aquí.\n\n' +
+          'El enlace debería verse algo como:\n' +
+          '`https://t.me/Antiabetbot?start=product_XXXX`',
+          { parse_mode: 'Markdown' }
+        );
       } catch (error) {
         this.logger.error('Error in /start command:', error);
         await ctx.reply('Hubo un error. Por favor, intenta nuevamente.');
@@ -109,6 +106,43 @@ export class TelegramService implements OnModuleInit {
 🏷️ Título: ${chatTitle}
 👤 Username: @${chatUsername}
       `, { parse_mode: 'Markdown' });
+    });
+
+    // Handler para mensajes de texto - detectar enlaces de producto
+    this.bot.on('text', async (ctx) => {
+      try {
+        // Ignorar comandos (empiezan con /)
+        if (ctx.message.text.startsWith('/')) {
+          return;
+        }
+
+        const text = ctx.message.text;
+        this.logger.log(`📝 Received text message: ${text.substring(0, 100)}`);
+
+        // Regex para detectar enlaces de producto de Telegram
+        // Soporta: https://t.me/BotName?start=product_ID o t.me/BotName?start=product_ID
+        const productLinkRegex = /(?:https?:\/\/)?t\.me\/\w+\?start=product_([a-zA-Z0-9]+)/i;
+        const match = text.match(productLinkRegex);
+
+        if (match && match[1]) {
+          const productId = match[1];
+          this.logger.log(`🎯 Detected product link, extracting ID: ${productId}`);
+          await this.handleProductPurchaseFlow(ctx, productId);
+        } else {
+          // No es un enlace válido - informar al usuario
+          this.logger.log('❌ Text does not contain valid product link');
+          await ctx.reply(
+            '❌ Por favor, envía el enlace de nuevo de un producto válido.\n\n' +
+            'Ese no lo estoy reconociendo. Revísale el enlace que me estás enviando.\n\n' +
+            '💡 El enlace debería verse algo como:\n' +
+            '`https://t.me/Antiabetbot?start=product_XXXX`',
+            { parse_mode: 'Markdown' }
+          );
+        }
+      } catch (error) {
+        this.logger.error('Error processing text message:', error);
+        await ctx.reply('Hubo un error al procesar tu mensaje. Por favor, intenta nuevamente.');
+      }
     });
   }
 

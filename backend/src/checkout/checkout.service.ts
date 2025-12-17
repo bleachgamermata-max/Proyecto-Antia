@@ -384,4 +384,160 @@ export class CheckoutService {
       } : null,
     };
   }
+
+  /**
+   * Simulate a successful payment (for testing purposes)
+   */
+  async simulateSuccessfulPayment(orderId: string) {
+    const order = await this.getOrderById(orderId);
+    
+    if (!order) {
+      throw new NotFoundException('Orden no encontrada');
+    }
+
+    if (order.status === 'PAGADA') {
+      return {
+        success: true,
+        message: 'La orden ya está pagada',
+        order,
+      };
+    }
+
+    // Update order status to PAGADA
+    await this.prisma.$runCommandRaw({
+      update: 'orders',
+      updates: [{
+        q: { _id: { $oid: orderId } },
+        u: {
+          $set: {
+            status: 'PAGADA',
+            payment_provider: 'stripe_simulated',
+            payment_method: 'card_simulated',
+            paid_at: { $date: new Date().toISOString() },
+            updated_at: { $date: new Date().toISOString() },
+          },
+        },
+      }],
+    });
+
+    // Send Telegram notification if user came from Telegram
+    let telegramResult = null;
+    if (order.telegramUserId) {
+      telegramResult = await this.telegramService.notifyPaymentSuccess(
+        order.telegramUserId,
+        orderId,
+        order.productId,
+      );
+    }
+
+    // Get updated order
+    const updatedOrder = await this.getOrderById(orderId);
+
+    return {
+      success: true,
+      message: 'Pago simulado exitosamente',
+      order: updatedOrder,
+      telegramNotification: telegramResult,
+    };
+  }
+
+  /**
+   * Complete payment and send notifications
+   */
+  async completePaymentAndNotify(orderId: string, sessionId?: string) {
+    const order = await this.getOrderById(orderId);
+    
+    if (!order) {
+      throw new NotFoundException('Orden no encontrada');
+    }
+
+    // If already paid, just return the order info
+    if (order.status === 'PAGADA') {
+      const product = await this.prisma.product.findUnique({
+        where: { id: order.productId },
+      });
+      const tipster = product ? await this.prisma.tipsterProfile.findUnique({
+        where: { id: product.tipsterId },
+      }) : null;
+
+      return {
+        success: true,
+        alreadyPaid: true,
+        order,
+        product,
+        tipster,
+      };
+    }
+
+    // Update order status to PAGADA
+    await this.prisma.$runCommandRaw({
+      update: 'orders',
+      updates: [{
+        q: { _id: { $oid: orderId } },
+        u: {
+          $set: {
+            status: 'PAGADA',
+            payment_provider: 'stripe',
+            provider_order_id: sessionId || order.providerOrderId,
+            payment_method: 'card',
+            paid_at: { $date: new Date().toISOString() },
+            updated_at: { $date: new Date().toISOString() },
+          },
+        },
+      }],
+    });
+
+    // Send Telegram notification if user came from Telegram
+    let telegramResult = null;
+    if (order.telegramUserId) {
+      telegramResult = await this.telegramService.notifyPaymentSuccess(
+        order.telegramUserId,
+        orderId,
+        order.productId,
+      );
+    }
+
+    // Get product and tipster info
+    const product = await this.prisma.product.findUnique({
+      where: { id: order.productId },
+    });
+    const tipster = product ? await this.prisma.tipsterProfile.findUnique({
+      where: { id: product.tipsterId },
+    }) : null;
+
+    // Get updated order
+    const updatedOrder = await this.getOrderById(orderId);
+
+    return {
+      success: true,
+      order: updatedOrder,
+      product,
+      tipster,
+      telegramNotification: telegramResult,
+    };
+  }
+
+  /**
+   * Get order details by ID
+   */
+  async getOrderDetails(orderId: string) {
+    const order = await this.getOrderById(orderId);
+    
+    if (!order) {
+      throw new NotFoundException('Orden no encontrada');
+    }
+
+    const product = await this.prisma.product.findUnique({
+      where: { id: order.productId },
+    });
+    const tipster = product ? await this.prisma.tipsterProfile.findUnique({
+      where: { id: product.tipsterId },
+    }) : null;
+
+    return {
+      order,
+      product,
+      tipster,
+    };
+  }
 }

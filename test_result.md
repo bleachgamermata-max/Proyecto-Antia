@@ -119,6 +119,37 @@
 - None currently - product CRUD is working perfectly
 - Backend API fully functional and tested
 
+## Telegram Bot Testing Results (2025-12-17)
+
+### Bug Fix: Webhook URL Misconfiguration - RESOLVED ✅
+**Root Cause**: The webhook was pointing to an old/stale preview URL (`a0adf3f8-...`) instead of the current URL (`betguru-7.preview.emergentagent.com`).
+
+**Fix Applied**:
+1. Updated supervisor config `/etc/supervisor/conf.d/supervisord.conf` to use correct `APP_URL`
+2. Backend now correctly sets webhook to `https://betguru-7.preview.emergentagent.com/api/telegram/webhook`
+
+### New Conversational Flow - IMPLEMENTED ✅
+**Feature**: Changed bot interaction from deep-link-only to "paste the link" flow.
+
+**Test Results (via curl webhook simulation)**:
+1. **`/start` command** ✅ PASS
+   - Bot responds: "Por favor, pega el enlace del producto aquí"
+   - Shows example link format
+
+2. **Valid product link pasted** ✅ PASS  
+   - Bot detects link with regex: `t.me/BotName?start=product_ID`
+   - Extracts product ID correctly
+   - Initiates purchase flow
+
+3. **Invalid text message** ✅ PASS
+   - Bot responds: "Por favor, envía el enlace de nuevo de un producto válido..."
+   - Shows example of correct format
+
+**Bot Details**:
+- Username: @Antiabetbot
+- Webhook: https://betguru-7.preview.emergentagent.com/api/telegram/webhook
+- Mode: Webhook (not polling)
+
 ## Test Credentials
 - Tipster: fausto.perez@antia.com / Tipster123!
 - Client: cliente@example.com / Client123!

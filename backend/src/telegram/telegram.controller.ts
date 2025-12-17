@@ -28,7 +28,25 @@ export class TelegramController {
     private prisma: PrismaService,
   ) {}
 
+  // Webhook endpoint (sin guards - debe ser público para Telegram)
+  @Post('webhook')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Telegram webhook endpoint' })
+  async handleWebhook(@Req() req: any, @Body() update: any) {
+    try {
+      this.logger.log('📥 Received webhook update');
+      // Procesar el update con el bot
+      await this.telegramService.handleUpdate(update);
+      return { ok: true };
+    } catch (error) {
+      this.logger.error('Error processing webhook:', error);
+      return { ok: false };
+    }
+  }
+
+  // Endpoints protegidos
   @Post('connect')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('TIPSTER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Connect Telegram channel manually' })
@@ -55,6 +73,7 @@ export class TelegramController {
   }
 
   @Delete('disconnect')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('TIPSTER')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
@@ -72,6 +91,7 @@ export class TelegramController {
   }
 
   @Get('channel-info')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('TIPSTER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get connected channel info' })
@@ -95,18 +115,4 @@ export class TelegramController {
     };
   }
 
-  @Post('webhook')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Telegram webhook endpoint' })
-  async handleWebhook(@Req() req: any, @Body() update: any) {
-    try {
-      this.logger.log('📥 Received webhook update');
-      // Procesar el update con el bot
-      await this.telegramService.handleUpdate(update);
-      return { ok: true };
-    } catch (error) {
-      this.logger.error('Error processing webhook:', error);
-      return { ok: false };
-    }
-  }
 }

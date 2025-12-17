@@ -66,10 +66,13 @@ export class TelegramService implements OnModuleInit {
     // Command /start - Flujo principal para clientes
     this.bot.command('start', async (ctx) => {
       try {
+        this.logger.log('📥 Received /start command');
         const startPayload = ctx.message.text.split(' ')[1]; // Obtener parámetro después de /start
+        this.logger.log(`📦 Start payload: ${startPayload || 'NONE'}`);
         
         if (!startPayload) {
           // Sin parámetro - Mensaje genérico
+          this.logger.log('ℹ️  No payload, sending generic message');
           await ctx.reply(
             '👋 ¡Bienvenido a Antia!\n\n' +
             'Para comprar pronósticos de un tipster, utiliza el link que te proporcionó en su canal.\n\n' +
@@ -81,8 +84,10 @@ export class TelegramService implements OnModuleInit {
         // Verificar si es un link de producto
         if (startPayload.startsWith('product_')) {
           const productId = startPayload.replace('product_', '');
+          this.logger.log(`🎯 Starting product flow for: ${productId}`);
           await this.handleProductPurchaseFlow(ctx, productId);
         } else {
+          this.logger.log(`❌ Invalid payload: ${startPayload}`);
           await ctx.reply('Link inválido. Por favor, usa el link proporcionado por tu tipster.');
         }
       } catch (error) {

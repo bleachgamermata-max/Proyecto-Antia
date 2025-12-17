@@ -13,6 +13,8 @@ export default function TipsterDashboard() {
   const [user, setUser] = useState<any>(null);
   const [products, setProducts] = useState([]);
   const [metrics, setMetrics] = useState<any>(null);
+  const [salesStats, setSalesStats] = useState<any>(null);
+  const [recentSales, setRecentSales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showProductForm, setShowProductForm] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);

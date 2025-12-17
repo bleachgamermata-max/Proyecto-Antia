@@ -544,19 +544,17 @@ export class TelegramService implements OnModuleInit {
       const userId = ctx.from.id.toString();
       const username = ctx.from.username || ctx.from.first_name;
 
-      // Crear orden pendiente
-      const orderId = await this.createPendingOrder(productId, userId, username);
-
-      // Generar link de checkout (simulado por ahora)
-      const checkoutUrl = `${process.env.APP_URL}/checkout?order=${orderId}&product=${productId}`;
+      // Generar link de checkout con parámetros de Telegram
+      const appUrl = this.config.get('APP_URL') || 'https://betguru-7.preview.emergentagent.com';
+      const checkoutUrl = `${appUrl}/checkout/${productId}?telegram_user_id=${userId}&telegram_username=${encodeURIComponent(username || '')}`;
 
       await ctx.reply(
         `💳 *Realizar Pago*\n\n` +
         `Haz clic en el botón de abajo para ir a la página de pago segura.\n\n` +
         `Podrás pagar como:\n` +
-        `• 👤 Usuario registrado (más rápido)\n` +
-        `• 🕶️ Usuario anónimo (solo email o teléfono)\n\n` +
-        `Métodos de pago: Tarjeta, PayPal, Crypto`,
+        `• 👤 Usuario invitado (solo email)\n` +
+        `• 📝 Registrarte para futuras compras\n\n` +
+        `Métodos de pago: Tarjeta de crédito/débito`,
         {
           parse_mode: 'Markdown',
           reply_markup: {

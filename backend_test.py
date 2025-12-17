@@ -1412,6 +1412,26 @@ class AntiaAPITester:
         
         # Test 6: Verify tipster earnings updated
         results["verify_tipster_earnings"] = self.test_verify_tipster_earnings_updated()
+
+        # Geolocation-Based Payment System Tests
+        self.log("\n" + "="*50)
+        self.log("🌍 GEOLOCATION-BASED PAYMENT SYSTEM TESTS")
+        self.log("="*50)
+        
+        # Test 1: Gateway detection
+        results["detect_gateway"] = self.test_detect_gateway()
+        
+        # Test 2: Feature flags
+        results["feature_flags"] = self.test_feature_flags()
+        
+        # Test 3: Spanish IP detection (via geolocation service)
+        results["spanish_ip_detection"] = self.test_spanish_ip_detection()
+        
+        # Test 4: Create order and verify geo data is stored
+        results["create_order_geo_data"] = self.test_create_order_with_geo_data()
+        
+        # Test 5: Verify order has geolocation data in MongoDB
+        results["verify_order_geo_data"] = self.test_verify_order_geolocation_data()
             
         return results
         

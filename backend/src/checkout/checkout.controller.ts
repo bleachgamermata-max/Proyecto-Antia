@@ -118,4 +118,21 @@ export class CheckoutController {
   async getOrder(@Param('orderId') orderId: string) {
     return this.checkoutService.getOrderDetails(orderId);
   }
+
+  // Create order and simulate payment in one step (for testing)
+  @Public()
+  @Post('test-purchase')
+  @ApiOperation({ summary: 'Create order and simulate payment (testing only)' })
+  async testPurchase(
+    @Body() body: {
+      productId: string;
+      email?: string;
+      phone?: string;
+      telegramUserId?: string;
+      telegramUsername?: string;
+    },
+  ) {
+    this.logger.log(`Test purchase for product ${body.productId}`);
+    return this.checkoutService.createAndSimulatePayment(body);
+  }
 }

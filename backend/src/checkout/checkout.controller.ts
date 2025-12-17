@@ -87,4 +87,35 @@ export class CheckoutController {
     this.logger.log('Received Stripe webhook');
     return this.checkoutService.handleStripeWebhook(rawBody, signature);
   }
+
+  // Simulate successful payment (for testing only)
+  @Public()
+  @Post('simulate-payment/:orderId')
+  @ApiOperation({ summary: 'Simulate successful payment (testing only)' })
+  async simulatePayment(@Param('orderId') orderId: string) {
+    this.logger.log(`Simulating payment for order ${orderId}`);
+    return this.checkoutService.simulateSuccessfulPayment(orderId);
+  }
+
+  // Complete payment manually (called from success page)
+  @Public()
+  @Post('complete-payment')
+  @ApiOperation({ summary: 'Complete payment and send Telegram notification' })
+  async completePayment(
+    @Body() body: {
+      orderId: string;
+      sessionId?: string;
+    },
+  ) {
+    this.logger.log(`Completing payment for order ${body.orderId}`);
+    return this.checkoutService.completePaymentAndNotify(body.orderId, body.sessionId);
+  }
+
+  // Get order details by ID
+  @Public()
+  @Get('order/:orderId')
+  @ApiOperation({ summary: 'Get order details' })
+  async getOrder(@Param('orderId') orderId: string) {
+    return this.checkoutService.getOrderDetails(orderId);
+  }
 }

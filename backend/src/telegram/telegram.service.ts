@@ -116,7 +116,7 @@ export class TelegramService implements OnModuleInit {
           return;
         }
 
-        const text = ctx.message.text;
+        const text = ctx.message.text.trim();
         this.logger.log(`📝 Received text message: ${text.substring(0, 100)}`);
 
         // Regex para detectar enlaces de producto de Telegram
@@ -129,13 +129,16 @@ export class TelegramService implements OnModuleInit {
           this.logger.log(`🎯 Detected product link, extracting ID: ${productId}`);
           await this.handleProductPurchaseFlow(ctx, productId);
         } else {
-          // No es un enlace válido - informar al usuario
-          this.logger.log('❌ Text does not contain valid product link');
+          // No es un enlace válido - dar instrucciones para comenzar
+          this.logger.log('❌ Text does not contain valid product link - sending instructions');
           await ctx.reply(
-            '❌ Por favor, envía el enlace de nuevo de un producto válido.\n\n' +
-            'Ese no lo estoy reconociendo. Revísale el enlace que me estás enviando.\n\n' +
+            '👋 ¡Hola! Soy el bot de Antia.\n\n' +
+            '📋 *Para comenzar el proceso de compra:*\n\n' +
+            '1️⃣ Escribe /start\n' +
+            '2️⃣ Pega el enlace del producto que deseas comprar\n\n' +
             '💡 El enlace debería verse algo como:\n' +
-            '`https://t.me/Antiabetbot?start=product_XXXX`',
+            '`https://t.me/Antiabetbot?start=product_XXXX`\n\n' +
+            '❓ Si no tienes un enlace, pídele a tu tipster que te lo proporcione.',
             { parse_mode: 'Markdown' }
           );
         }

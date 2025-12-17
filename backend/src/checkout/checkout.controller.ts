@@ -31,10 +31,31 @@ export class CheckoutController {
     return this.checkoutService.getProductForCheckout(productId);
   }
 
+  // Detect gateway based on IP geolocation
+  @Public()
+  @Get('detect-gateway')
+  @ApiOperation({ summary: 'Detect payment gateway based on client IP' })
+  async detectGateway(@Req() req: any) {
+    const clientIp = req.headers['x-forwarded-for']?.split(',')[0] || 
+                     req.headers['x-real-ip'] || 
+                     req.connection?.remoteAddress || 
+                     req.ip || 
+                     '127.0.0.1';
+    return this.checkoutService.detectGateway(clientIp);
+  }
+
+  // Get feature flags for payment methods
+  @Public()
+  @Get('feature-flags')
+  @ApiOperation({ summary: 'Get payment feature flags' })
+  async getFeatureFlags() {
+    return this.checkoutService.getFeatureFlags();
+  }
+
   // Create checkout session
   @Public()
   @Post('session')
-  @ApiOperation({ summary: 'Create Stripe checkout session' })
+  @ApiOperation({ summary: 'Create payment checkout session' })
   async createCheckoutSession(
     @Body() body: {
       productId: string;
@@ -45,9 +66,17 @@ export class CheckoutController {
       telegramUserId?: string;
       telegramUsername?: string;
     },
+    @Req() req: any,
   ) {
-    this.logger.log(`Creating checkout session for product ${body.productId}`);
-    return this.checkoutService.createCheckoutSession(body);
+    // Get client IP for geolocation
+    const clientIp = req.headers['x-forwarded-for']?.split(',')[0] || 
+                     req.headers['x-real-ip'] || 
+                     req.connection?.remoteAddress || 
+                     req.ip || 
+                     '127.0.0.1';
+    
+    this.logger.log(`Creating checkout session for product ${body.productId} (IP: ${clientIp})`);
+    return this.checkoutService.createCheckoutSession({ ...body, clientIp });
   }
 
   // Get checkout status

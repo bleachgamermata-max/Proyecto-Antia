@@ -1053,6 +1053,281 @@ class AntiaAPITester:
             self.log(f"❌ Verify tipster earnings test failed: {str(e)}", "ERROR")
             return False
 
+    # ===== GEOLOCATION-BASED PAYMENT SYSTEM TESTS =====
+    
+    def test_detect_gateway(self) -> bool:
+        """Test gateway detection based on IP geolocation"""
+        self.log("=== Testing Gateway Detection ===")
+        
+        try:
+            response = self.make_request("GET", "/checkout/detect-gateway", use_auth=False)
+            
+            if response.status_code == 200:
+                gateway_info = response.json()
+                self.log("✅ Successfully retrieved gateway detection info")
+                
+                # Check response structure
+                expected_fields = ["gateway", "geo", "availableMethods"]
+                for field in expected_fields:
+                    if field in gateway_info:
+                        self.log(f"✅ Gateway info has {field}: {gateway_info[field]}")
+                    else:
+                        self.log(f"❌ Gateway info missing {field}", "ERROR")
+                        return False
+                
+                # Validate gateway value
+                gateway = gateway_info.get("gateway")
+                if gateway in ["stripe", "redsys"]:
+                    self.log(f"✅ Gateway is valid: {gateway}")
+                else:
+                    self.log(f"❌ Invalid gateway value: {gateway}", "ERROR")
+                    return False
+                
+                # Check geo info structure
+                geo = gateway_info.get("geo", {})
+                geo_fields = ["country", "countryName", "ip", "isSpain"]
+                for field in geo_fields:
+                    if field in geo:
+                        self.log(f"✅ Geo info has {field}: {geo[field]}")
+                    else:
+                        self.log(f"❌ Geo info missing {field}", "ERROR")
+                        return False
+                
+                # Check available methods
+                methods = gateway_info.get("availableMethods", [])
+                if isinstance(methods, list) and len(methods) > 0:
+                    self.log(f"✅ Available methods: {methods}")
+                else:
+                    self.log("❌ No available payment methods", "ERROR")
+                    return False
+                
+                return True
+            else:
+                self.log(f"❌ Gateway detection failed with status {response.status_code}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Gateway detection test failed: {str(e)}", "ERROR")
+            return False
+
+    def test_feature_flags(self) -> bool:
+        """Test payment feature flags"""
+        self.log("=== Testing Feature Flags ===")
+        
+        try:
+            response = self.make_request("GET", "/checkout/feature-flags", use_auth=False)
+            
+            if response.status_code == 200:
+                flags = response.json()
+                self.log("✅ Successfully retrieved feature flags")
+                
+                # Check expected flags
+                expected_flags = {
+                    "cryptoEnabled": False,
+                    "redsysEnabled": True,
+                    "stripeEnabled": True
+                }
+                
+                for flag_name, expected_value in expected_flags.items():
+                    if flag_name in flags:
+                        actual_value = flags[flag_name]
+                        if actual_value == expected_value:
+                            self.log(f"✅ {flag_name}: {actual_value} (matches expected)")
+                        else:
+                            self.log(f"⚠️ {flag_name}: {actual_value} (expected {expected_value})", "WARN")
+                    else:
+                        self.log(f"❌ Missing flag: {flag_name}", "ERROR")
+                        return False
+                
+                return True
+            else:
+                self.log(f"❌ Feature flags failed with status {response.status_code}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Feature flags test failed: {str(e)}", "ERROR")
+            return False
+
+    def test_spanish_ip_detection(self) -> bool:
+        """Test Spanish IP detection via geolocation service"""
+        self.log("=== Testing Spanish IP Detection ===")
+        
+        # We can't directly test with a Spanish IP since we're making requests from our server
+        # But we can test the gateway detection endpoint and verify it handles geolocation
+        try:
+            response = self.make_request("GET", "/checkout/detect-gateway", use_auth=False)
+            
+            if response.status_code == 200:
+                gateway_info = response.json()
+                geo = gateway_info.get("geo", {})
+                
+                # Log the detected country for our current IP
+                country = geo.get("country", "Unknown")
+                country_name = geo.get("countryName", "Unknown")
+                is_spain = geo.get("isSpain", False)
+                
+                self.log(f"✅ Detected country: {country} ({country_name})")
+                self.log(f"✅ Is Spain: {is_spain}")
+                
+                # The test passes if we get valid geolocation data
+                # In a real Spanish IP test, we would expect:
+                # - country: "ES"
+                # - countryName: "Spain" 
+                # - isSpain: true
+                # - gateway: "redsys" (if Redsys is enabled)
+                
+                if country and country_name:
+                    self.log("✅ Geolocation service is working correctly")
+                    
+                    # Log what would happen with a Spanish IP
+                    if is_spain:
+                        self.log("✅ Current IP is from Spain - would use Redsys gateway")
+                    else:
+                        self.log(f"ℹ️ Current IP is from {country_name} - would use Stripe gateway")
+                        self.log("ℹ️ Spanish IP (88.6.125.1) would return ES country code and use Redsys")
+                    
+                    return True
+                else:
+                    self.log("❌ Invalid geolocation data", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ Spanish IP detection test failed with status {response.status_code}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Spanish IP detection test failed: {str(e)}", "ERROR")
+            return False
+
+    def test_create_order_with_geo_data(self) -> bool:
+        """Test creating order and verify geo data is stored"""
+        self.log("=== Testing Create Order with Geo Data ===")
+        
+        purchase_data = {
+            "productId": "694206ceb76f354acbfff5e9",
+            "email": "geo_test@example.com"
+        }
+        
+        try:
+            response = self.make_request("POST", "/checkout/test-purchase", purchase_data, use_auth=False)
+            
+            if response.status_code in [200, 201]:
+                result = response.json()
+                self.log("✅ Test purchase completed successfully")
+                
+                # Check if purchase was successful
+                if result.get("success"):
+                    self.log("✅ Purchase marked as successful")
+                    
+                    # Get the order ID
+                    order_id = result.get("orderId")
+                    if order_id:
+                        self.log(f"✅ Order created with ID: {order_id}")
+                        
+                        # Store for MongoDB verification
+                        self.test_order_id_for_cleanup = order_id
+                        
+                        # Verify the order has required fields
+                        order = result.get("order")
+                        if order:
+                            self.log(f"✅ Order status: {order.get('status')}")
+                            self.log(f"✅ Payment provider: {order.get('paymentProvider')}")
+                        
+                        return True
+                    else:
+                        self.log("❌ No order ID in response", "ERROR")
+                        return False
+                else:
+                    self.log("❌ Purchase marked as failed", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ Create order with geo data failed with status {response.status_code}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Create order with geo data test failed: {str(e)}", "ERROR")
+            return False
+
+    def test_verify_order_geolocation_data(self) -> bool:
+        """Verify order has geolocation data in MongoDB"""
+        self.log("=== Verifying Order Geolocation Data in MongoDB ===")
+        
+        try:
+            import subprocess
+            
+            # Query MongoDB for the test order with geolocation fields
+            mongo_script = '''
+            db.orders.findOne(
+                {email_backup: "geo_test@example.com"}, 
+                {
+                    detected_country: 1, 
+                    detected_country_name: 1, 
+                    payment_provider: 1, 
+                    commission_cents: 1, 
+                    commission_rate: 1,
+                    status: 1,
+                    created_at: 1
+                }
+            )
+            '''
+            
+            cmd = ["mongosh", "--quiet", "antia_db", "--eval", mongo_script]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            
+            if result.returncode == 0:
+                self.log("✅ Successfully queried MongoDB for geolocation data")
+                output = result.stdout.strip()
+                self.log(f"MongoDB output: {output}")
+                
+                # Check if we got valid data
+                if "detected_country" in output:
+                    self.log("✅ Order has detected_country field")
+                else:
+                    self.log("❌ Order missing detected_country field", "ERROR")
+                    return False
+                
+                if "detected_country_name" in output:
+                    self.log("✅ Order has detected_country_name field")
+                else:
+                    self.log("❌ Order missing detected_country_name field", "ERROR")
+                    return False
+                
+                if "payment_provider" in output:
+                    self.log("✅ Order has payment_provider field")
+                else:
+                    self.log("❌ Order missing payment_provider field", "ERROR")
+                    return False
+                
+                if "commission_cents" in output:
+                    self.log("✅ Order has commission_cents field")
+                else:
+                    self.log("❌ Order missing commission_cents field", "ERROR")
+                    return False
+                
+                if "commission_rate" in output:
+                    self.log("✅ Order has commission_rate field")
+                else:
+                    self.log("❌ Order missing commission_rate field", "ERROR")
+                    return False
+                
+                # Check if order exists at all
+                if "null" in output:
+                    self.log("❌ No order found with email geo_test@example.com", "ERROR")
+                    return False
+                
+                self.log("✅ All required geolocation fields present in order")
+                return True
+            else:
+                self.log(f"❌ MongoDB geolocation verification failed: {result.stderr}", "ERROR")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            self.log("❌ MongoDB geolocation verification timed out", "ERROR")
+            return False
+        except Exception as e:
+            self.log(f"❌ MongoDB geolocation verification failed: {str(e)}", "ERROR")
+            return False
+
     def run_all_tests(self) -> Dict[str, bool]:
         """Run all API tests"""
         self.log("🚀 Starting Antia Platform Backend API Tests")

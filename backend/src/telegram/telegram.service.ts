@@ -28,17 +28,11 @@ export class TelegramService implements OnModuleInit {
       const botInfo = await this.bot.telegram.getMe();
       this.logger.log(`📱 Bot info: @${botInfo.username}`);
       
-      // TEMPORALMENTE DESACTIVADO: El bot.launch() causa problemas con el backend
-      // Lanzar el bot para que empiece a escuchar mensajes
-      // await this.bot.launch();
-      // this.logger.log('✅ Telegram bot is now listening for messages');
-      
-      // Graceful shutdown
-      // process.once('SIGINT', () => this.bot.stop('SIGINT'));
-      // process.once('SIGTERM', () => this.bot.stop('SIGTERM'));
-      
-      this.logger.warn('⚠️  Bot polling disabled - bot can send messages but won\'t receive them');
-      this.logger.log('✅ TelegramService initialized (send-only mode)');
+      // Configurar webhook en lugar de polling
+      const webhookUrl = `${this.config.get('APP_URL')}/api/telegram/webhook`;
+      await this.bot.telegram.setWebhook(webhookUrl);
+      this.logger.log(`✅ Webhook configured: ${webhookUrl}`);
+      this.logger.log('✅ TelegramService initialized (webhook mode)');
     } catch (error) {
       this.logger.error('Failed to initialize Telegram bot:', error);
       this.logger.warn('⚠️  Telegram features may not work correctly');

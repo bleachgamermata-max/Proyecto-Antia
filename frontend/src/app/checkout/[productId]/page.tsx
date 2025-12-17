@@ -120,6 +120,41 @@ export default function CheckoutPage() {
     }
   };
 
+  // Simulate payment for testing
+  const handleSimulatePayment = async () => {
+    setError('');
+
+    if (!email) {
+      setError('El correo electrónico es obligatorio');
+      return;
+    }
+
+    if (!acceptTerms || !acceptAge) {
+      setError('Debes aceptar los términos y confirmar que eres mayor de edad');
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const res = await api.post('/checkout/test-purchase', {
+        productId,
+        email,
+        phone: phone || undefined,
+        telegramUserId: telegramUserId || undefined,
+        telegramUsername: telegramUsername || undefined,
+      });
+
+      if (res.data.success) {
+        // Redirect to success page
+        window.location.href = `/checkout/success?order_id=${res.data.orderId}`;
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Error al simular el pago');
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

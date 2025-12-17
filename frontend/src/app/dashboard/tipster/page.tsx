@@ -765,6 +765,65 @@ export default function TipsterDashboard() {
               </div>
             )}
 
+            {/* Canal Premium para Clientes */}
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <span className="text-2xl">⭐</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Canal Premium para Clientes</h3>
+                  <p className="text-sm text-gray-600">
+                    Configura el enlace del canal donde tus clientes recibirán acceso después de la compra. 
+                    Este enlace se enviará automáticamente por el bot de Telegram.
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Enlace del Canal Premium (Opcional)
+                </label>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={premiumChannelLink}
+                    onChange={(e) => setPremiumChannelLink(e.target.value)}
+                    placeholder="Ej: https://t.me/+AbCdEf123456 o https://t.me/mi_canal_premium"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={savingPremiumChannel}
+                  />
+                  <button
+                    onClick={async () => {
+                      setSavingPremiumChannel(true);
+                      try {
+                        await telegramApi.setPremiumChannel(premiumChannelLink || null);
+                        alert('✅ Canal premium actualizado correctamente');
+                      } catch (error) {
+                        alert('Error al guardar el canal premium');
+                      } finally {
+                        setSavingPremiumChannel(false);
+                      }
+                    }}
+                    disabled={savingPremiumChannel}
+                    className="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {savingPremiumChannel ? 'Guardando...' : 'Guardar'}
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  💡 Este es el enlace que recibirán tus clientes después de comprar. Puede ser un enlace de invitación de Telegram.
+                </p>
+                {premiumChannelLink && (
+                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-800">
+                      ✅ Canal premium configurado: <a href={premiumChannelLink} target="_blank" rel="noopener noreferrer" className="underline">{premiumChannelLink}</a>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Instrucciones */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
               <h3 className="font-semibold text-gray-900 mb-3">📖 Cómo conectar tu canal</h3>

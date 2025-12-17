@@ -84,6 +84,9 @@ export default function TipsterDashboard() {
           setTelegramConnected(true);
           setTelegramChannel(telegramRes.data.channel);
         }
+        if (telegramRes.data.premiumChannelLink) {
+          setPremiumChannelLink(telegramRes.data.premiumChannelLink);
+        }
       } catch (error) {
         console.error('Error loading Telegram info:', error);
       }

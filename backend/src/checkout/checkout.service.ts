@@ -104,8 +104,18 @@ export class CheckoutService {
       where: { id: product.tipsterId },
     });
 
-    // 2. Create order in database BEFORE Stripe session
-    const orderId = await this.createPendingOrder({
+    // 2. Detect country and determine gateway
+    const clientIp = dto.clientIp || '127.0.0.1';
+    const { gateway, geo } = await this.detectGateway(clientIp);
+
+    // Calculate commission based on gateway
+    const commissionRate = gateway === 'redsys' 
+      ? this.redsysService.getCommissionRate() 
+      : 2.9; // Stripe ~2.9%
+    const commissionCents = Math.round(product.priceCents * (commissionRate / 100));
+
+    // 3. Create order in database with geo info
+    const orderId = await this.createPendingOrderWithGeo({
       productId: dto.productId,
       tipsterId: product.tipsterId,
       amountCents: product.priceCents,
@@ -115,13 +125,38 @@ export class CheckoutService {
       telegramUserId: dto.telegramUserId,
       telegramUsername: dto.telegramUsername,
       isGuest: dto.isGuest,
+      country: geo.country,
+      countryName: geo.countryName,
+      gateway,
+      commissionCents,
+      commissionRate,
     });
 
-    // 3. Build success and cancel URLs
+    // 4. Build success and cancel URLs
     const successUrl = `${dto.originUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${orderId}`;
     const cancelUrl = `${dto.originUrl}/checkout/cancel?order_id=${orderId}`;
+    const webhookUrl = `${this.config.get('APP_URL')}/api/checkout/webhook/redsys`;
 
-    // 4. Create Stripe checkout session
+    // 5. Create payment session based on gateway
+    if (gateway === 'redsys' && this.redsysService.isAvailable()) {
+      return this.createRedsysSession(orderId, product, successUrl, cancelUrl, webhookUrl, geo.country);
+    } else {
+      return this.createStripeSession(orderId, product, tipster, successUrl, cancelUrl, dto, geo.country);
+    }
+  }
+
+  /**
+   * Create Stripe checkout session
+   */
+  private async createStripeSession(
+    orderId: string,
+    product: any,
+    tipster: any,
+    successUrl: string,
+    cancelUrl: string,
+    dto: CreateCheckoutDto,
+    country: string,
+  ): Promise<CheckoutSessionResponse> {
     try {
       const session = await this.stripe.checkout.sessions.create({
         payment_method_types: ['card'],
@@ -149,23 +184,118 @@ export class CheckoutService {
           telegramUserId: dto.telegramUserId || '',
           telegramUsername: dto.telegramUsername || '',
           isGuest: dto.isGuest ? 'true' : 'false',
+          country,
         },
       });
 
-      // 5. Update order with Stripe session ID
       await this.updateOrderWithSession(orderId, session.id);
 
-      this.logger.log(`Created checkout session ${session.id} for order ${orderId}`);
+      this.logger.log(`Created Stripe session ${session.id} for order ${orderId} (country: ${country})`);
 
       return {
         url: session.url!,
         sessionId: session.id,
         orderId,
+        gateway: 'stripe',
+        country,
       };
     } catch (error) {
       this.logger.error('Error creating Stripe session:', error);
       throw new BadRequestException('Error al crear la sesión de pago');
     }
+  }
+
+  /**
+   * Create Redsys payment session (for Spain)
+   */
+  private async createRedsysSession(
+    orderId: string,
+    product: any,
+    successUrl: string,
+    cancelUrl: string,
+    webhookUrl: string,
+    country: string,
+  ): Promise<CheckoutSessionResponse> {
+    try {
+      // Default to card for now (Bizum can be selected in checkout UI)
+      const result = await this.redsysService.createPaymentSession(
+        orderId,
+        product.priceCents,
+        product.currency,
+        'CARD',
+        successUrl.replace('{CHECKOUT_SESSION_ID}', orderId),
+        cancelUrl,
+        webhookUrl,
+      );
+
+      await this.updateOrderWithSession(orderId, result.transactionId);
+
+      this.logger.log(`Created Redsys session ${result.transactionId} for order ${orderId} (country: ${country})`);
+
+      return {
+        url: result.redirectUrl,
+        sessionId: result.transactionId,
+        orderId,
+        gateway: 'redsys',
+        country,
+      };
+    } catch (error) {
+      this.logger.error('Error creating Redsys session:', error);
+      // Fallback to Stripe if Redsys fails
+      this.logger.warn('Falling back to Stripe due to Redsys error');
+      throw new BadRequestException('Error al crear la sesión de pago con Redsys');
+    }
+  }
+
+  /**
+   * Create pending order with geolocation data
+   */
+  private async createPendingOrderWithGeo(data: {
+    productId: string;
+    tipsterId: string;
+    amountCents: number;
+    currency: string;
+    email?: string;
+    phone?: string;
+    telegramUserId?: string;
+    telegramUsername?: string;
+    isGuest: boolean;
+    country: string;
+    countryName: string;
+    gateway: string;
+    commissionCents: number;
+    commissionRate: number;
+  }): Promise<string> {
+    const now = new Date();
+    const orderId = this.generateOrderId();
+
+    await this.prisma.$runCommandRaw({
+      insert: 'orders',
+      documents: [{
+        _id: { $oid: orderId },
+        product_id: data.productId,
+        tipster_id: data.tipsterId,
+        amount_cents: data.amountCents,
+        currency: data.currency,
+        email_backup: data.email || null,
+        phone_backup: data.phone || null,
+        telegram_user_id: data.telegramUserId || null,
+        telegram_username: data.telegramUsername || null,
+        status: 'PENDING',
+        payment_provider: data.gateway,
+        // Geolocation data
+        detected_country: data.country,
+        detected_country_name: data.countryName,
+        // Commission data
+        commission_cents: data.commissionCents,
+        commission_rate: data.commissionRate,
+        meta: { isGuest: data.isGuest },
+        created_at: { $date: now.toISOString() },
+        updated_at: { $date: now.toISOString() },
+      }],
+    });
+
+    return orderId;
   }
 
   async getCheckoutStatus(sessionId: string) {

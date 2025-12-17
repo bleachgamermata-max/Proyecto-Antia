@@ -85,6 +85,24 @@ export default function TipsterDashboard() {
       } catch (error) {
         console.error('Error loading Telegram info:', error);
       }
+
+      // Load sales stats
+      try {
+        const statsRes = await ordersApi.getMyStats();
+        setSalesStats(statsRes.data);
+      } catch (error) {
+        console.error('Error loading sales stats:', error);
+        setSalesStats({ totalSales: 0, totalEarningsCents: 0, currency: 'EUR' });
+      }
+
+      // Load recent sales
+      try {
+        const salesRes = await ordersApi.getMySales();
+        setRecentSales(salesRes.data.slice(0, 10)); // Last 10 sales
+      } catch (error) {
+        console.error('Error loading recent sales:', error);
+        setRecentSales([]);
+      }
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {

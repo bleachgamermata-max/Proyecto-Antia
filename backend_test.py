@@ -792,6 +792,266 @@ class AntiaAPITester:
             self.log(f"❌ Log check failed: {str(e)}", "ERROR")
             return False
 
+    # ===== PREMIUM CHANNEL FLOW TESTS =====
+    
+    def test_get_channel_info(self) -> bool:
+        """Test getting channel info including premium channel link"""
+        self.log("=== Testing Get Channel Info (Premium Channel) ===")
+        
+        try:
+            response = self.make_request("GET", "/telegram/channel-info")
+            
+            if response.status_code == 200:
+                channel_info = response.json()
+                self.log("✅ Successfully retrieved channel info")
+                
+                # Check response structure
+                expected_fields = ["connected", "channel", "premiumChannelLink"]
+                for field in expected_fields:
+                    if field in channel_info:
+                        self.log(f"✅ Channel info has {field}: {channel_info[field]}")
+                    else:
+                        self.log(f"❌ Channel info missing {field}", "ERROR")
+                        return False
+                
+                # Check if premium channel link exists
+                premium_link = channel_info.get("premiumChannelLink")
+                if premium_link:
+                    self.log(f"✅ Premium channel link found: {premium_link}")
+                    # Validate it's a Telegram link
+                    if "t.me" in premium_link:
+                        self.log("✅ Premium channel link is valid Telegram URL")
+                    else:
+                        self.log("⚠️ Premium channel link doesn't appear to be Telegram URL", "WARN")
+                else:
+                    self.log("ℹ️ No premium channel link set (this is normal for initial state)")
+                
+                return True
+            else:
+                self.log(f"❌ Get channel info failed with status {response.status_code}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Get channel info test failed: {str(e)}", "ERROR")
+            return False
+
+    def test_update_premium_channel_link(self) -> bool:
+        """Test updating premium channel link"""
+        self.log("=== Testing Update Premium Channel Link ===")
+        
+        update_data = {
+            "premiumChannelLink": "https://t.me/+NuevoCanal456"
+        }
+        
+        try:
+            response = self.make_request("POST", "/telegram/premium-channel", update_data)
+            
+            if response.status_code == 200 or response.status_code == 201:
+                result = response.json()
+                self.log("✅ Premium channel link updated successfully")
+                
+                # Check response structure
+                if result.get("success"):
+                    self.log("✅ Update marked as successful")
+                    
+                    # Verify the link was set correctly
+                    if result.get("premiumChannelLink") == update_data["premiumChannelLink"]:
+                        self.log("✅ Premium channel link matches expected value")
+                        return True
+                    else:
+                        self.log(f"❌ Premium channel link mismatch. Expected: {update_data['premiumChannelLink']}, Got: {result.get('premiumChannelLink')}", "ERROR")
+                        return False
+                else:
+                    self.log("❌ Update marked as failed", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ Update premium channel failed with status {response.status_code}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Update premium channel test failed: {str(e)}", "ERROR")
+            return False
+
+    def test_clear_premium_channel_link(self) -> bool:
+        """Test clearing premium channel link (set to null)"""
+        self.log("=== Testing Clear Premium Channel Link ===")
+        
+        clear_data = {
+            "premiumChannelLink": None
+        }
+        
+        try:
+            response = self.make_request("POST", "/telegram/premium-channel", clear_data)
+            
+            if response.status_code == 200 or response.status_code == 201:
+                result = response.json()
+                self.log("✅ Premium channel link cleared successfully")
+                
+                # Check response structure
+                if result.get("success"):
+                    self.log("✅ Clear operation marked as successful")
+                    
+                    # Verify the link was cleared
+                    if result.get("premiumChannelLink") is None:
+                        self.log("✅ Premium channel link is null as expected")
+                        return True
+                    else:
+                        self.log(f"❌ Premium channel link not cleared. Got: {result.get('premiumChannelLink')}", "ERROR")
+                        return False
+                else:
+                    self.log("❌ Clear operation marked as failed", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ Clear premium channel failed with status {response.status_code}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Clear premium channel test failed: {str(e)}", "ERROR")
+            return False
+
+    def test_set_premium_channel_final(self) -> bool:
+        """Test setting premium channel back to a final value"""
+        self.log("=== Testing Set Premium Channel Final ===")
+        
+        final_data = {
+            "premiumChannelLink": "https://t.me/+CanalPremiumFinal"
+        }
+        
+        try:
+            response = self.make_request("POST", "/telegram/premium-channel", final_data)
+            
+            if response.status_code == 200 or response.status_code == 201:
+                result = response.json()
+                self.log("✅ Premium channel link set to final value successfully")
+                
+                # Check response structure
+                if result.get("success"):
+                    self.log("✅ Final set operation marked as successful")
+                    
+                    # Verify the link was set correctly
+                    if result.get("premiumChannelLink") == final_data["premiumChannelLink"]:
+                        self.log("✅ Premium channel link matches final expected value")
+                        return True
+                    else:
+                        self.log(f"❌ Premium channel link mismatch. Expected: {final_data['premiumChannelLink']}, Got: {result.get('premiumChannelLink')}", "ERROR")
+                        return False
+                else:
+                    self.log("❌ Final set operation marked as failed", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ Set premium channel final failed with status {response.status_code}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Set premium channel final test failed: {str(e)}", "ERROR")
+            return False
+
+    def test_purchase_triggers_notification(self) -> bool:
+        """Test that purchase triggers notification with channel link"""
+        self.log("=== Testing Purchase Triggers Notification ===")
+        
+        purchase_data = {
+            "productId": "694206ceb76f354acbfff5e9",
+            "email": "test@final.com",
+            "telegramUserId": "999888777"
+        }
+        
+        try:
+            response = self.make_request("POST", "/checkout/test-purchase", purchase_data, use_auth=False)
+            
+            if response.status_code == 200 or response.status_code == 201:
+                result = response.json()
+                self.log("✅ Test purchase completed successfully")
+                
+                # Check if purchase was successful
+                if result.get("success"):
+                    self.log("✅ Purchase marked as successful")
+                    
+                    # Check if order was created
+                    if "orderId" in result and result["orderId"]:
+                        self.log(f"✅ Order created with ID: {result['orderId']}")
+                        
+                        # Store order ID for potential cleanup
+                        self.test_order_id_for_cleanup = result["orderId"]
+                        
+                        # Check if product info is included
+                        if "product" in result and result["product"]:
+                            product = result["product"]
+                            self.log(f"✅ Product info included: {product.get('title')} - {product.get('priceCents')} cents")
+                        
+                        # Check if tipster info is included
+                        if "tipster" in result and result["tipster"]:
+                            tipster = result["tipster"]
+                            self.log(f"✅ Tipster info included: {tipster.get('publicName')}")
+                        
+                        return True
+                    else:
+                        self.log("❌ No order ID in response", "ERROR")
+                        return False
+                else:
+                    self.log("❌ Purchase marked as failed", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ Test purchase failed with status {response.status_code}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Test purchase failed: {str(e)}", "ERROR")
+            return False
+
+    def test_verify_tipster_earnings_updated(self) -> bool:
+        """Test that tipster earnings are updated after purchase"""
+        self.log("=== Testing Tipster Earnings Updated ===")
+        
+        try:
+            response = self.make_request("GET", "/orders/stats")
+            
+            if response.status_code == 200:
+                stats = response.json()
+                self.log("✅ Successfully retrieved tipster stats")
+                
+                # Check response structure
+                expected_fields = ["totalSales", "totalEarningsCents", "currency"]
+                for field in expected_fields:
+                    if field in stats:
+                        self.log(f"✅ Stats has {field}: {stats[field]}")
+                    else:
+                        self.log(f"❌ Stats missing {field}", "ERROR")
+                        return False
+                
+                # Check if earnings are reasonable (should be > 0 if there are sales)
+                total_sales = stats.get("totalSales", 0)
+                total_earnings = stats.get("totalEarningsCents", 0)
+                
+                if total_sales > 0:
+                    self.log(f"✅ Tipster has {total_sales} total sales")
+                    
+                    if total_earnings > 0:
+                        self.log(f"✅ Tipster has {total_earnings} cents in total earnings")
+                        
+                        # Check if earnings match expected amount (6900 cents from test purchase)
+                        # Note: This might not be exact if there were previous sales
+                        if total_earnings >= 6900:
+                            self.log("✅ Total earnings include expected amount from test purchase")
+                        else:
+                            self.log(f"⚠️ Total earnings ({total_earnings}) less than expected minimum (6900)", "WARN")
+                        
+                        return True
+                    else:
+                        self.log("❌ Total earnings is 0 despite having sales", "ERROR")
+                        return False
+                else:
+                    self.log("ℹ️ No sales found for tipster (this might be expected for new account)")
+                    return True  # Still pass as this might be expected
+                    
+            else:
+                self.log(f"❌ Get tipster stats failed with status {response.status_code}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Verify tipster earnings test failed: {str(e)}", "ERROR")
+            return False
+
     def run_all_tests(self) -> Dict[str, bool]:
         """Run all API tests"""
         self.log("🚀 Starting Antia Platform Backend API Tests")

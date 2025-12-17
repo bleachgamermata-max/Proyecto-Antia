@@ -110,3 +110,9 @@ export const checkoutApi = {
   verify: (sessionId: string, orderId: string) => 
     api.get('/checkout/verify', { params: { session_id: sessionId, order_id: orderId } }),
 };
+
+// Orders / Sales
+export const ordersApi = {
+  getMySales: () => api.get('/orders/sales'),
+  getMyStats: () => api.get('/orders/stats'),
+};

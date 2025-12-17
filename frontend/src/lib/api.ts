@@ -111,8 +111,9 @@ export const checkoutApi = {
     api.get('/checkout/verify', { params: { session_id: sessionId, order_id: orderId } }),
 };
 
-// Orders / Sales
+// Orders / Sales (Tipster)
 export const ordersApi = {
-  getMySales: () => api.get('/orders/sales'),
-  getMyStats: () => api.get('/orders/stats'),
+  getMy: () => api.get('/orders/my'), // For clients
+  getMySales: () => api.get('/orders/sales'), // For tipsters
+  getMyStats: () => api.get('/orders/stats'), // For tipsters
 };

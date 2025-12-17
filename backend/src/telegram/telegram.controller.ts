@@ -104,14 +104,69 @@ export class TelegramController {
       return {
         connected: false,
         channel: null,
+        premiumChannelLink: null,
       };
     }
 
     const channel = await this.telegramService.getConnectedChannel(tipster.id);
 
+    // Get premium channel link from tipster profile
+    const result = await this.prisma.$runCommandRaw({
+      find: 'tipster_profiles',
+      filter: { _id: { $oid: tipster.id } },
+      projection: { premium_channel_link: 1 },
+      limit: 1,
+    }) as any;
+    
+    const premiumChannelLink = result.cursor?.firstBatch?.[0]?.premium_channel_link || null;
+
     return {
       connected: !!channel,
       channel,
+      premiumChannelLink,
+    };
+  }
+
+  @Post('premium-channel')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('TIPSTER')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Set premium channel link for clients after purchase' })
+  async setPremiumChannel(
+    @CurrentUser() user: any,
+    @Body() body: { premiumChannelLink: string | null },
+  ) {
+    const tipster = await this.prisma.tipsterProfile.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (!tipster) {
+      return {
+        success: false,
+        message: 'Perfil de tipster no encontrado',
+      };
+    }
+
+    // Update the premium channel link
+    await this.prisma.$runCommandRaw({
+      update: 'tipster_profiles',
+      updates: [{
+        q: { _id: { $oid: tipster.id } },
+        u: {
+          $set: {
+            premium_channel_link: body.premiumChannelLink || null,
+            updated_at: { $date: new Date().toISOString() },
+          },
+        },
+      }],
+    });
+
+    this.logger.log(`Updated premium channel link for tipster ${tipster.id}: ${body.premiumChannelLink}`);
+
+    return {
+      success: true,
+      message: 'Canal premium actualizado correctamente',
+      premiumChannelLink: body.premiumChannelLink,
     };
   }
 

@@ -648,6 +648,19 @@ export class TelegramService implements OnModuleInit {
   }
 
   /**
+   * Manejar updates desde webhook
+   */
+  async handleUpdate(update: any) {
+    try {
+      this.logger.log('Processing webhook update');
+      await this.bot.handleUpdate(update);
+    } catch (error) {
+      this.logger.error('Error handling update:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Obtener información del canal conectado
    */
   async getConnectedChannel(tipsterId: string) {

@@ -830,6 +830,29 @@ class AntiaAPITester:
         results["stripe_create_session"] = self.test_stripe_checkout_create_session()
         results["telegram_webhook"] = self.test_telegram_webhook()
         results["mongodb_orders"] = self.test_mongodb_orders()
+
+        # Post-Payment Flow Tests
+        self.log("\n" + "="*50)
+        self.log("💳 POST-PAYMENT FLOW TESTS")
+        self.log("="*50)
+        
+        # Test 1: Get existing order details
+        results["get_order_details"] = self.test_get_order_details()
+        
+        # Test 2: Create new order and simulate payment
+        test_order_id = self.create_test_order_in_mongodb()
+        if test_order_id:
+            results["simulate_payment"] = self.test_simulate_payment(test_order_id)
+            results["complete_payment"] = self.test_complete_payment(test_order_id)
+            results["verify_mongodb_order"] = self.verify_order_in_mongodb(test_order_id)
+        else:
+            self.log("⚠️ Skipping payment tests due to order creation failure", "WARN")
+            results["simulate_payment"] = False
+            results["complete_payment"] = False
+            results["verify_mongodb_order"] = False
+        
+        # Test 3: Check Telegram notification logs
+        results["telegram_notification_logs"] = self.check_telegram_notification_logs()
             
         return results
         

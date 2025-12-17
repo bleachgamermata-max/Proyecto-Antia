@@ -7,6 +7,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Req,
+  Logger,
 } from '@nestjs/common';
 import { TelegramService } from './telegram.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -18,8 +20,9 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('telegram')
 @Controller('telegram')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class TelegramController {
+  private readonly logger = new Logger(TelegramController.name);
+
   constructor(
     private telegramService: TelegramService,
     private prisma: PrismaService,
@@ -90,5 +93,20 @@ export class TelegramController {
       connected: !!channel,
       channel,
     };
+  }
+
+  @Post('webhook')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Telegram webhook endpoint' })
+  async handleWebhook(@Req() req: any, @Body() update: any) {
+    try {
+      this.logger.log('📥 Received webhook update');
+      // Procesar el update con el bot
+      await this.telegramService.handleUpdate(update);
+      return { ok: true };
+    } catch (error) {
+      this.logger.error('Error processing webhook:', error);
+      return { ok: false };
+    }
   }
 }

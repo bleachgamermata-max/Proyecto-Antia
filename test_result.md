@@ -343,3 +343,25 @@
 
 **Agent:** testing  
 **Message:** Stripe Checkout Integration testing completed successfully. All 4 requested test scenarios passed. The checkout flow works correctly up to the Stripe API call, which fails as expected due to the test API key (sk_test_emergent). Order creation, MongoDB persistence, Telegram webhook processing, and error handling are all working properly. The integration is ready for production with a valid Stripe API key.
+
+## Post-Payment Flow Testing (2025-12-17)
+
+### Implementation Complete ✅
+**New endpoints added:**
+- `POST /api/checkout/simulate-payment/:orderId` - Simulate successful payment (testing)
+- `POST /api/checkout/complete-payment` - Complete payment and send Telegram notification
+- `GET /api/checkout/order/:orderId` - Get order details
+
+### Telegram Notification Flow ✅
+When payment is completed:
+1. Order status updated to "PAGADA" in MongoDB
+2. Bot sends thank you message to user
+3. Bot generates invite link to tipster's premium channel
+4. Bot sends access message with channel link
+
+### Success Page Features ✅
+- Shows payment confirmation with green checkmark
+- Displays order details (product, tipster, price, status)
+- "Acceso vía Telegram" section with "Ir a Telegram" button
+- "Próximos pasos" instructions
+- Direct channel link if available

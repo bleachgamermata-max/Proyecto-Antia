@@ -306,6 +306,53 @@ export default function CheckoutPage() {
               </div>
             </div>
 
+            {/* Payment Method Selection (for Spain - Redsys) */}
+            {gatewayInfo?.geo.isSpain && gatewayInfo.availableMethods.length > 1 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Método de pago
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className={`flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                    selectedPaymentMethod === 'card' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="card"
+                      checked={selectedPaymentMethod === 'card'}
+                      onChange={() => setSelectedPaymentMethod('card')}
+                      className="sr-only"
+                    />
+                    <div className="text-center">
+                      <CreditCard className="w-6 h-6 mx-auto mb-1" />
+                      <span className="text-sm font-medium">Tarjeta</span>
+                    </div>
+                  </label>
+                  <label className={`flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                    selectedPaymentMethod === 'bizum' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="bizum"
+                      checked={selectedPaymentMethod === 'bizum'}
+                      onChange={() => setSelectedPaymentMethod('bizum')}
+                      className="sr-only"
+                    />
+                    <div className="text-center">
+                      <span className="text-2xl">📱</span>
+                      <span className="text-sm font-medium block">Bizum</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            )}
+
             {/* Registration Fields */}
             {checkoutMode === 'register' && (
               <>

@@ -487,7 +487,15 @@ export class CheckoutService {
       }],
     });
 
-    // Send Telegram notification if user came from Telegram
+    // Get product and tipster info first
+    const product = await this.prisma.product.findUnique({
+      where: { id: order.productId },
+    });
+    const tipster = product ? await this.prisma.tipsterProfile.findUnique({
+      where: { id: product.tipsterId },
+    }) : null;
+
+    // Send Telegram notification to BUYER if user came from Telegram
     let telegramResult = null;
     if (order.telegramUserId) {
       telegramResult = await this.telegramService.notifyPaymentSuccess(
@@ -497,13 +505,18 @@ export class CheckoutService {
       );
     }
 
-    // Get product and tipster info
-    const product = await this.prisma.product.findUnique({
-      where: { id: order.productId },
-    });
-    const tipster = product ? await this.prisma.tipsterProfile.findUnique({
-      where: { id: product.tipsterId },
-    }) : null;
+    // Send notification to TIPSTER about new sale
+    if (product) {
+      await this.telegramService.notifyTipsterNewSale(
+        product.tipsterId,
+        orderId,
+        order.productId,
+        order.amountCents,
+        order.currency,
+        order.emailBackup,
+        order.telegramUsername,
+      );
+    }
 
     // Get updated order
     const updatedOrder = await this.getOrderById(orderId);

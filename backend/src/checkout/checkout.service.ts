@@ -348,6 +348,66 @@ export class CheckoutService {
     return { received: true };
   }
 
+  /**
+   * Handle Redsys webhook notification
+   */
+  async handleRedsysWebhook(body: any) {
+    const result = await this.redsysService.processWebhook(body);
+
+    if (!result.success || !result.orderId) {
+      this.logger.warn('Redsys webhook processing failed or no orderId');
+      return { received: true, processed: false };
+    }
+
+    this.logger.log(`Processing Redsys webhook for order ${result.orderId}`);
+
+    // Update order status
+    const status = result.success ? 'PAGADA' : 'FAILED';
+    await this.prisma.$runCommandRaw({
+      update: 'orders',
+      updates: [{
+        q: { _id: { $oid: result.orderId } },
+        u: {
+          $set: {
+            status,
+            payment_provider: 'redsys',
+            provider_order_id: result.transactionId,
+            response_code: result.responseCode,
+            authorization_code: result.authCode,
+            updated_at: { $date: new Date().toISOString() },
+          },
+        },
+      }],
+    });
+
+    // If successful, send Telegram notification
+    if (result.success) {
+      const order = await this.getOrderById(result.orderId);
+      if (order?.telegramUserId) {
+        await this.telegramService.notifyPaymentSuccess(
+          order.telegramUserId,
+          result.orderId,
+          order.productId,
+        );
+      }
+
+      // Notify tipster
+      if (order) {
+        await this.telegramService.notifyTipsterNewSale(
+          order.tipsterId,
+          result.orderId,
+          order.productId,
+          order.amountCents,
+          order.currency,
+          order.emailBackup,
+          order.telegramUsername,
+        );
+      }
+    }
+
+    return { received: true, processed: true };
+  }
+
   async handlePaymentSuccess(session: Stripe.Checkout.Session) {
     const orderId = session.metadata?.orderId;
     if (!orderId) {

@@ -13,6 +13,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { BotModule } from './bot/bot.module';
 import { TelegramModule } from './telegram/telegram.module';
+import { CheckoutModule } from './checkout/checkout.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -36,6 +37,7 @@ import { HealthController } from './health.controller';
     TicketsModule,
     BotModule,
     TelegramModule,
+    CheckoutModule,
   ],
   controllers: [HealthController],
 })

@@ -1113,6 +1113,29 @@ class AntiaAPITester:
         
         # Test 3: Check Telegram notification logs
         results["telegram_notification_logs"] = self.check_telegram_notification_logs()
+
+        # Premium Channel Flow Tests
+        self.log("\n" + "="*50)
+        self.log("🔗 PREMIUM CHANNEL FLOW TESTS")
+        self.log("="*50)
+        
+        # Test 1: Get channel info (includes premium channel)
+        results["get_channel_info"] = self.test_get_channel_info()
+        
+        # Test 2: Update premium channel link
+        results["update_premium_channel"] = self.test_update_premium_channel_link()
+        
+        # Test 3: Clear premium channel (set to null)
+        results["clear_premium_channel"] = self.test_clear_premium_channel_link()
+        
+        # Test 4: Set premium channel back
+        results["set_premium_channel_final"] = self.test_set_premium_channel_final()
+        
+        # Test 5: Test purchase triggers notification with channel link
+        results["purchase_triggers_notification"] = self.test_purchase_triggers_notification()
+        
+        # Test 6: Verify tipster earnings updated
+        results["verify_tipster_earnings"] = self.test_verify_tipster_earnings_updated()
             
         return results
         

@@ -34,9 +34,7 @@ export class CheckoutService {
     if (!stripeKey) {
       this.logger.warn('STRIPE_API_KEY not configured');
     }
-    this.stripe = new Stripe(stripeKey || '', {
-      apiVersion: '2025-12-18.acacia',
-    });
+    this.stripe = new Stripe(stripeKey || '');
   }
 
   async createCheckoutSession(dto: CreateCheckoutDto): Promise<CheckoutSessionResponse> {

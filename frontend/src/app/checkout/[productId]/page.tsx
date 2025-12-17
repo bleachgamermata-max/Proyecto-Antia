@@ -344,21 +344,43 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* Submit Button */}
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="w-full mt-6 bg-black text-white py-4 rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {submitting ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <>
-                <CreditCard className="w-5 h-5" />
-                Proceder al pago
-              </>
-            )}
-          </button>
+          {/* Submit Buttons */}
+          <div className="space-y-3 mt-6">
+            {/* Real Payment Button */}
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="w-full bg-black text-white py-4 rounded-xl font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {submitting ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <CreditCard className="w-5 h-5" />
+                  Proceder al pago con Stripe
+                </>
+              )}
+            </button>
+
+            {/* Simulate Payment Button (for testing) */}
+            <button
+              onClick={handleSimulatePayment}
+              disabled={submitting}
+              className="w-full bg-green-600 text-white py-4 rounded-xl font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {submitting ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  ✅ Simular Pago (Testing)
+                </>
+              )}
+            </button>
+
+            <p className="text-xs text-center text-gray-500">
+              El botón verde es solo para pruebas. En producción solo estará el pago real.
+            </p>
+          </div>
 
           {/* Security Badge */}
           <div className="flex items-center justify-center gap-2 mt-4 text-gray-500">

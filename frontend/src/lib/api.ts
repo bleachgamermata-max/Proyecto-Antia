@@ -65,11 +65,6 @@ export const productsApi = {
   getCheckoutLink: (id: string) => api.get(`/products/${id}/checkout-link`),
 };
 
-// Orders
-export const ordersApiClient = {
-  getMy: () => api.get('/orders/my'),
-};
-
 // Referrals
 export const referralsApi = {
   getLinks: () => api.get('/referrals/links'),

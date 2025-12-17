@@ -37,6 +37,8 @@ export default function TipsterDashboard() {
   const [telegramChannelInput, setTelegramChannelInput] = useState('');
   const [telegramError, setTelegramError] = useState('');
   const [publishingProduct, setPublishingProduct] = useState<string | null>(null);
+  const [premiumChannelLink, setPremiumChannelLink] = useState('');
+  const [savingPremiumChannel, setSavingPremiumChannel] = useState(false);
 
   useEffect(() => {
     // Verificar autenticación antes de cargar datos

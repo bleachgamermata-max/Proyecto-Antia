@@ -87,6 +87,7 @@ export const telegramApi = {
   connect: (channelIdentifier: string) => api.post('/telegram/connect', { channelIdentifier }),
   disconnect: () => api.delete('/telegram/disconnect'),
   publishProduct: (productId: string) => api.post(`/products/${productId}/publish-telegram`),
+  setPremiumChannel: (premiumChannelLink: string | null) => api.post('/telegram/premium-channel', { premiumChannelLink }),
 };
 
 // Checkout

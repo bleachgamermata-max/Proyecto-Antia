@@ -22,6 +22,16 @@ interface Product {
 
 type CheckoutMode = 'guest' | 'register';
 
+interface GatewayInfo {
+  gateway: 'stripe' | 'redsys';
+  geo: {
+    country: string;
+    countryName: string;
+    isSpain: boolean;
+  };
+  availableMethods: string[];
+}
+
 export default function CheckoutPage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -45,9 +55,33 @@ export default function CheckoutPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  // Gateway detection
+  const [gatewayInfo, setGatewayInfo] = useState<GatewayInfo | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('card');
+
   useEffect(() => {
     loadProduct();
+    detectGateway();
   }, [productId]);
+
+  const detectGateway = async () => {
+    try {
+      const res = await api.get('/checkout/detect-gateway');
+      setGatewayInfo(res.data);
+      // Set default payment method based on available options
+      if (res.data.availableMethods?.length > 0) {
+        setSelectedPaymentMethod(res.data.availableMethods[0]);
+      }
+    } catch (err) {
+      console.error('Error detecting gateway:', err);
+      // Default to Stripe if detection fails
+      setGatewayInfo({
+        gateway: 'stripe',
+        geo: { country: 'XX', countryName: 'Unknown', isSpain: false },
+        availableMethods: ['card'],
+      });
+    }
+  };
 
   const loadProduct = async () => {
     try {

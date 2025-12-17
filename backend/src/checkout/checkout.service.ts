@@ -607,7 +607,7 @@ export class CheckoutService {
 
     this.logger.log(`Simulated payment for order ${orderId}`);
 
-    // 4. Send Telegram notification if user came from Telegram
+    // 4. Send Telegram notification to BUYER if user came from Telegram
     let telegramResult = null;
     if (data.telegramUserId) {
       telegramResult = await this.telegramService.notifyPaymentSuccess(
@@ -617,7 +617,18 @@ export class CheckoutService {
       );
     }
 
-    // 5. Get order details
+    // 5. Notify TIPSTER about new sale
+    await this.telegramService.notifyTipsterNewSale(
+      product.tipsterId,
+      orderId,
+      data.productId,
+      product.priceCents,
+      product.currency,
+      data.email,
+      data.telegramUsername,
+    );
+
+    // 6. Get order details
     const order = await this.getOrderById(orderId);
     const tipster = await this.prisma.tipsterProfile.findUnique({
       where: { id: product.tipsterId },

@@ -117,6 +117,16 @@ export class CheckoutController {
     return this.checkoutService.handleStripeWebhook(rawBody, signature);
   }
 
+  // Redsys webhook
+  @Public()
+  @Post('webhook/redsys')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Redsys webhook endpoint' })
+  async handleRedsysWebhook(@Body() body: any) {
+    this.logger.log('Received Redsys webhook');
+    return this.checkoutService.handleRedsysWebhook(body);
+  }
+
   // Simulate successful payment (for testing only)
   @Public()
   @Post('simulate-payment/:orderId')

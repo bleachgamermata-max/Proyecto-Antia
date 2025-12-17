@@ -395,31 +395,66 @@ export default function TipsterDashboard() {
 
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm text-gray-500">Clicks Únicos</div>
-                  <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+1.3%</div>
+                  <div className="text-sm text-gray-500">💰 Ingresos Totales</div>
+                  {salesStats?.totalSales > 0 && (
+                    <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">Activo</div>
+                  )}
                 </div>
-                <div className="text-3xl font-bold text-gray-900">{metrics?.clicks || 0}</div>
-                <div className="text-xs text-gray-500 mt-1">Este mes</div>
+                <div className="text-3xl font-bold text-green-600">
+                  €{((salesStats?.totalEarningsCents || 0) / 100).toFixed(2)}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">Total acumulado</div>
               </div>
 
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm text-gray-500">Registros</div>
-                  <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+4.3%</div>
+                  <div className="text-sm text-gray-500">🛒 Ventas</div>
                 </div>
-                <div className="text-3xl font-bold text-gray-900">{metrics?.registers || 0}</div>
-                <div className="text-xs text-gray-500 mt-1">Conversión: {metrics?.conversionRate || 0}%</div>
+                <div className="text-3xl font-bold text-gray-900">{salesStats?.totalSales || 0}</div>
+                <div className="text-xs text-gray-500 mt-1">Total de ventas</div>
               </div>
 
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm text-gray-500">Ingresos</div>
-                  <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">+1.8%</div>
+                  <div className="text-sm text-gray-500">📦 Productos</div>
                 </div>
-                <div className="text-3xl font-bold text-gray-900">€{(metrics?.totalDeposits / 100 || 0).toFixed(2)}</div>
-                <div className="text-xs text-gray-500 mt-1">Este mes</div>
+                <div className="text-3xl font-bold text-gray-900">{products.length}</div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {products.filter((p: any) => p.active).length} activos
+                </div>
               </div>
             </div>
+
+            {/* Recent Sales Section */}
+            {recentSales.length > 0 && (
+              <div className="bg-white rounded-lg shadow mb-6">
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-xl font-bold text-gray-900">🧾 Últimas Ventas</h2>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-3">
+                    {recentSales.map((sale: any) => (
+                      <div key={sale.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {sale.telegramUsername || sale.email || 'Cliente anónimo'}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {sale.paidAt ? new Date(sale.paidAt.$date || sale.paidAt).toLocaleString('es-ES') : 'Fecha no disponible'}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-green-600">
+                            +€{((sale.amountCents || 0) / 100).toFixed(2)}
+                          </div>
+                          <div className="text-xs text-gray-500">{sale.paymentProvider || 'stripe'}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Products Preview */}
             <div className="bg-white rounded-lg shadow">

@@ -366,6 +366,34 @@ When payment is completed:
 - "Próximos pasos" instructions
 - Direct channel link if available
 
+## Geolocation Payment System (2025-12-17)
+
+### Implementation Complete ✅
+**New services created:**
+- `geolocation.service.ts` - Detects country from IP using ip-api.com
+- `redsys.service.ts` - Redsys payment integration (Spain: card + Bizum)
+
+### Payment Gateway Rules:
+- 🇪🇸 **Spain** → Redsys (card + Bizum)
+- 🌍 **Outside Spain** → Stripe (card only)
+
+### API Endpoints:
+- `GET /api/checkout/detect-gateway` - Detect gateway based on client IP
+- `GET /api/checkout/feature-flags` - Get payment feature flags
+- `POST /api/checkout/webhook/redsys` - Redsys webhook
+
+### Order Data Stored:
+- `detected_country` - Country code (ES, US, etc.)
+- `detected_country_name` - Full country name
+- `payment_provider` - Gateway used (stripe/redsys)
+- `commission_cents` - Commission amount
+- `commission_rate` - Commission percentage
+
+### Feature Flags:
+- `cryptoEnabled: false` - Future feature for crypto payments
+- `redsysEnabled: true`
+- `stripeEnabled: true`
+
 ## Post-Payment Flow Testing Results (2025-12-17)
 
 ### Comprehensive Post-Payment Flow Testing - ALL PASSED ✅

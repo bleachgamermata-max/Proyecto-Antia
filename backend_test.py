@@ -22,6 +22,7 @@ class AntiaAPITester:
         self.session = requests.Session()
         self.access_token = None
         self.test_product_id = None
+        self.test_order_id_for_cleanup = None
         
     def log(self, message: str, level: str = "INFO"):
         """Log test messages"""

@@ -157,15 +157,26 @@ export default function CheckoutSuccessPage() {
                 Hemos enviado el enlace de acceso al canal premium a tu chat de Telegram. 
                 Haz clic en el botón para volver al bot y acceder.
               </p>
-              <a
-                href={`https://t.me/${getBotUsername()}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <MessageCircle className="w-5 h-5" />
-                Ir a Telegram
-              </a>
+              <div className="space-y-2">
+                {/* Link para app de Telegram */}
+                <a
+                  href={`tg://resolve?domain=${getBotUsername()}`}
+                  className="block w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  Abrir en App de Telegram
+                </a>
+                {/* Link alternativo para web */}
+                <a
+                  href={`https://t.me/${getBotUsername()}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full bg-white border border-blue-300 text-blue-600 py-3 rounded-xl font-medium hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <ExternalLink className="w-5 h-5" />
+                  Abrir en Telegram Web
+                </a>
+              </div>
             </div>
           )}
 
